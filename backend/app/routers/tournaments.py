@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Query
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -18,6 +19,21 @@ from app.schemas.tournament import (
 from app.services import bracket as bracket_service
 from app.services import match as match_service
 from app.services import tournament as tournament_service
+
+
+class AddParticipantRequest(BaseModel):
+    player_name: str
+
+
+class ParticipantOut(BaseModel):
+    id: int
+    tournament_id: int
+    player_id: int
+    seed: Optional[int] = None
+    eliminated: bool = False
+    placement: Optional[int] = None
+
+    model_config = {"from_attributes": True}
 
 router = APIRouter(prefix="/tournaments", tags=["tournaments"])
 

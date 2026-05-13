@@ -130,14 +130,27 @@ async def update_status(
 
 
 async def join_tournament(db: AsyncSession, tournament_id: int, user: User) -> Participant:
+    """User joins tournament - creates a Player profile and adds as Participant"""
+    from app.models.player import Player
+    
     t = await get_tournament(db, tournament_id)
     if t.status != "REGISTRATION_OPEN":
         raise BadRequest("Tournament is not open for registration")
 
+    # Create or get player profile for this user
+    player = Player(
+        display_name=user.username,
+        avatar_url=user.avatar_url,
+        created_by=user.id,
+    )
+    db.add(player)
+    await db.flush()  # get player.id
+
+    # Check if already joined
     existing = await db.execute(
         select(Participant).where(
             Participant.tournament_id == tournament_id,
-            Participant.user_id == user.id,
+            Participant.player_id == player.id,
         )
     )
     if existing.scalar_one_or_none():
@@ -152,7 +165,7 @@ async def join_tournament(db: AsyncSession, tournament_id: int, user: User) -> P
     if count >= t.max_players:
         raise BadRequest("Tournament is full")
 
-    participant = Participant(tournament_id=tournament_id, user_id=user.id)
+    participant = Participant(tournament_id=tournament_id, player_id=player.id)
     db.add(participant)
     await db.flush()  # get participant.id
 
@@ -216,19 +229,30 @@ async def join_tournament_by_player(
 
 
 async def leave_tournament(db: AsyncSession, tournament_id: int, user_id: int):
+    """User leaves tournament - remove their participant record by finding player created by user"""
+    from app.models.player import Player
+    
     t = await get_tournament(db, tournament_id)
     if t.status != "REGISTRATION_OPEN":
         raise BadRequest("Can only leave during registration")
 
+    # Find player created by this user
+    player_result = await db.execute(
+        select(Player).where(Player.created_by == user_id)
+    )
+    player = player_result.scalars().first()
+    if not player:
+        raise NotFound("No player profile found for this user")
+
     result = await db.execute(
         select(Participant).where(
             Participant.tournament_id == tournament_id,
-            Participant.user_id == user_id,
+            Participant.player_id == player.id,
         )
     )
     p = result.scalar_one_or_none()
     if not p:
-        raise NotFound("Not a participant")
+        raise NotFound("Not a participant in this tournament")
 
     await db.delete(p)
     await db.commit()
@@ -241,3 +265,48 @@ async def get_participant_count(db: AsyncSession, tournament_id: int) -> int:
         )
     )
     return result.scalar() or 0
+
+
+async def add_participant(
+    db: AsyncSession, tournament_id: int, host_id: int, player_name: str
+) -> Participant:
+    """Host adds a participant (player) to tournament"""
+    from app.models.player import Player
+    
+    t = await get_tournament(db, tournament_id)
+    if t.host_id != host_id:
+        raise Forbidden("Only host can add participants")
+    
+    if t.status not in ("DRAFT", "REGISTRATION_OPEN", "SEEDING"):
+        raise BadRequest("Cannot add participants in current tournament state")
+
+    # Create player profile
+    player = Player(display_name=player_name, created_by=host_id)
+    db.add(player)
+    await db.flush()  # get player.id
+
+    # Check tournament is not full
+    count_result = await db.execute(
+        select(func.count()).select_from(Participant).where(
+            Participant.tournament_id == tournament_id
+        )
+    )
+    count = count_result.scalar()
+    if count >= t.max_players:
+        raise BadRequest("Tournament is full")
+
+    # Create participant
+    participant = Participant(tournament_id=tournament_id, player_id=player.id)
+    db.add(participant)
+    await db.flush()
+
+    # Create standing
+    standing = Standing(
+        tournament_id=tournament_id,
+        participant_id=participant.id,
+    )
+    db.add(standing)
+
+    await db.commit()
+    await db.refresh(participant)
+    return participant
