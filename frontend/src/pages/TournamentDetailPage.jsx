@@ -73,13 +73,13 @@ function TournamentDetailPage() {
   }, [id, location.state]);
 
   return (
-    <div className="-mx-4 -my-6 min-h-[calc(100vh-3.5rem)] bg-[#10131a] sm:-mx-6 lg:-mx-8">
-      <div className="mx-auto min-h-[calc(100vh-3.5rem)] max-w-[1440px] bg-[radial-gradient(circle_at_12%_18%,rgba(173,198,255,0.12),transparent_36%),linear-gradient(132deg,#1d2027,#2f313a)] lg:grid lg:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="border-r border-[#424754] bg-[#191b23]/70">
+    <div className="-mx-4 -my-6 min-h-[calc(100vh-3.5rem)] bg-surface sm:-mx-6 lg:-mx-8">
+      <div className="mx-auto min-h-[calc(100vh-3.5rem)] max-w-[1440px] bg-tournament-shell lg:grid lg:grid-cols-[280px_minmax(0,1fr)]">
+        <aside className="border-r border-outline-variant bg-surface-container-low/70">
           <div className="px-6 py-6">
             <Link
               to="/app/dashboard"
-              className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#10131a] text-[#c2c6d6] hover:text-white"
+              className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-surface text-on-surface-variant hover:text-white"
             >
               <ChevronLeft size={22} />
             </Link>
@@ -93,8 +93,8 @@ function TournamentDetailPage() {
                 onClick={() => setActiveTab(tab.key)}
                 className={`w-full rounded-md px-4 py-2.5 text-left text-lg leading-tight tracking-tight transition ${
                   activeTab === tab.key
-                    ? "bg-[#32353c] text-white"
-                    : "text-[#c2c6d6] hover:bg-[#32353c]/60 hover:text-white"
+                    ? "bg-surface-container-highest text-white"
+                    : "text-on-surface-variant hover:bg-surface-container-highest/60 hover:text-white"
                 }`}
               >
                 {tab.label}
@@ -108,29 +108,29 @@ function TournamentDetailPage() {
             <h1 className="font-display text-3xl font-bold italic tracking-tight text-white md:text-4xl">{tournament.name}</h1>
             <button
               type="button"
-              className="inline-flex items-center justify-center rounded-full border border-[#424754] bg-[#32353c] px-6 py-3 text-[#e1e2ec] hover:bg-[#3c3f47]"
+              className="inline-flex items-center justify-center rounded-full border border-outline-variant bg-surface-container-highest px-6 py-3 text-on-surface hover:bg-surface-bright"
             >
               <Share2 size={18} />
             </button>
           </div>
 
-          <div className="mt-5 h-1 w-28 bg-[#df7412]" />
+          <div className="mt-5 h-1 w-28 bg-tertiary-container" />
 
-          <div className="mt-8 rounded-2xl border border-[#424754] bg-[#191b23]/90 p-8 lg:flex lg:items-start lg:justify-between lg:gap-8">
+          <div className="mt-8 rounded-2xl border border-outline-variant bg-surface-container-low/90 p-8 lg:flex lg:items-start lg:justify-between lg:gap-8">
             <dl className="grid grid-cols-[105px_1fr] gap-x-6 gap-y-3 text-base leading-tight md:grid-cols-[120px_1fr] md:text-xl">
-              <dt className="text-[#c2c6d6]">Players</dt>
+              <dt className="text-on-surface-variant">Players</dt>
               <dd className="text-white">{tournament.participants}</dd>
-              <dt className="text-[#c2c6d6]">Format</dt>
+              <dt className="text-on-surface-variant">Format</dt>
               <dd className="text-white">{tournament.format}</dd>
-              <dt className="text-[#c2c6d6]">Game</dt>
+              <dt className="text-on-surface-variant">Game</dt>
               <dd className="text-white">{tournament.game}</dd>
-              <dt className="text-[#c2c6d6]">Start Time</dt>
+              <dt className="text-on-surface-variant">Start Time</dt>
               <dd className="text-white">{formatDateTime(tournament.startTime)}</dd>
             </dl>
 
-            <div className="mt-6 rounded-full bg-[#4a4d54] px-7 py-4 text-lg leading-tight lg:mt-0">
-              <p className="text-[#e1e2ec]">Organized by</p>
-              <p className="mt-1 text-[#ff9b4a]">{tournament.organizer}</p>
+            <div className="mt-6 rounded-full bg-surface-bright px-7 py-4 text-lg leading-tight lg:mt-0">
+              <p className="text-on-surface">Organized by</p>
+              <p className="mt-1 text-tertiary">{tournament.organizer}</p>
             </div>
           </div>
 
@@ -140,30 +140,30 @@ function TournamentDetailPage() {
                 Manage Participants
               </h2>
               <div className="flex flex-wrap gap-3">
-                <button className="inline-flex items-center gap-2 rounded-full border border-[#424754] bg-[#4a4d54] px-5 py-2.5 text-sm font-semibold text-[#e1e2ec] hover:bg-[#5a5d65]">
+                <button className="inline-flex items-center gap-2 rounded-full border border-outline-variant bg-surface-bright px-5 py-2.5 text-sm font-semibold text-on-surface hover:bg-surface-container-highest">
                   <Shuffle size={16} /> Shuffle Seeds
                 </button>
-                <button className="inline-flex items-center gap-2 rounded-full border border-[#424754] bg-[#4a4d54] px-5 py-2.5 text-sm font-semibold text-[#e1e2ec] hover:bg-[#5a5d65]">
+                <button className="inline-flex items-center gap-2 rounded-full border border-outline-variant bg-surface-bright px-5 py-2.5 text-sm font-semibold text-on-surface hover:bg-surface-container-highest">
                   <ClipboardList size={16} /> Bulk Add
                 </button>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-[#424754] bg-[#191b23]/85 p-8">
-              <p className="text-base text-[#e1e2ec] md:text-lg">
+            <div className="rounded-2xl border border-outline-variant bg-surface-container-low/85 p-8">
+              <p className="text-base text-on-surface md:text-lg">
                 No participants yet. Add participants to start generating brackets.
               </p>
             </div>
 
             <div className="flex justify-end">
-              <button className="inline-flex items-center gap-2 rounded-full bg-[#df7412] px-7 py-3 text-base font-bold italic text-white hover:bg-[#f28a2d]">
+              <button className="inline-flex items-center gap-2 rounded-full bg-tertiary-container px-7 py-3 text-base font-bold italic text-white hover:bg-tertiary">
                 <Plus size={20} /> Add Participant
               </button>
             </div>
 
-            <div className="rounded-xl border border-[#424754] bg-[#10131a]/75 p-5 text-sm text-[#c2c6d6]">
+            <div className="rounded-xl border border-outline-variant bg-surface/75 p-5 text-sm text-on-surface-variant">
               <p className="inline-flex items-center gap-2">
-                <Swords size={16} className="text-[#adc6ff]" />
+                <Swords size={16} className="text-primary-fixed-dim" />
                 A bracket preview will be displayed once 2 or more participants are registered.
               </p>
             </div>

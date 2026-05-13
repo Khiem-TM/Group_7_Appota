@@ -10,13 +10,13 @@ function ProfilePage() {
 
       <section className="soft-panel p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-cyan-500 text-xl font-bold text-slate-950">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary-container text-xl font-bold text-on-primary">
             {currentUser.avatar}
           </div>
           <div>
             <h3 className="font-display text-2xl text-white">{currentUser.displayName}</h3>
-            <p className="text-sm text-slate-300">@{currentUser.username} • {currentUser.role}</p>
-            <p className="mt-1 text-sm text-slate-400">{currentUser.bio}</p>
+            <p className="text-sm text-on-surface-variant">@{currentUser.username} • {currentUser.role}</p>
+            <p className="mt-1 text-sm text-on-surface-variant">{currentUser.bio}</p>
           </div>
         </div>
       </section>
@@ -25,9 +25,9 @@ function ProfilePage() {
         <h3 className="font-display text-xl text-white">Managed Tournaments</h3>
         <div className="mt-3 space-y-2">
           {tournaments.map((tournament) => (
-            <div key={tournament.id} className="rounded-xl border border-slate-700 bg-slate-900/70 p-3">
-              <p className="font-medium text-slate-100">{tournament.name}</p>
-              <p className="text-sm text-slate-400">{tournament.game} • {tournament.startDate}</p>
+            <div key={tournament.id} className="rounded-xl border border-outline-variant bg-surface-container-low/70 p-3">
+              <p className="font-medium text-on-surface">{tournament.name}</p>
+              <p className="text-sm text-on-surface-variant">{tournament.game} • {tournament.startDate}</p>
             </div>
           ))}
         </div>
@@ -37,3 +37,5 @@ function ProfilePage() {
 }
 
 export default ProfilePage;
+
+

@@ -25,7 +25,7 @@ function ExploreTournamentsPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search by name, game, or region"
-          className="w-full rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm outline-none focus:border-cyan-400"
+          className="w-full rounded-xl border border-outline-variant bg-surface-container-low/70 px-3 py-2 text-sm outline-none focus:border-primary-container"
         />
       </div>
 
@@ -43,3 +43,4 @@ function ExploreTournamentsPage() {
 }
 
 export default ExploreTournamentsPage;
+

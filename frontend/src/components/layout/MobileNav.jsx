@@ -10,7 +10,7 @@ const tabs = [
 
 function MobileNav({ basePath = "" }) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-800 bg-slate-950/95 px-2 py-2 backdrop-blur lg:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-outline-variant bg-surface/95 px-2 py-2 backdrop-blur lg:hidden">
       <div className="mx-auto grid max-w-xl grid-cols-4 gap-1">
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -21,11 +21,11 @@ function MobileNav({ basePath = "" }) {
               to={target}
               className={({ isActive }) =>
                 `flex flex-col items-center rounded-xl py-2 text-[11px] transition ${
-                  isActive ? "bg-slate-900 text-white" : "text-slate-400"
+                  isActive ? "bg-surface-container-low text-white" : "text-on-surface-variant"
                 }`
               }
             >
-              <Icon size={17} className={"mb-1 " + "text-cyan-400"} />
+              <Icon size={17} className={"mb-1 " + "text-primary-fixed-dim"} />
               {tab.label}
             </NavLink>
           );
@@ -36,3 +36,4 @@ function MobileNav({ basePath = "" }) {
 }
 
 export default MobileNav;
+

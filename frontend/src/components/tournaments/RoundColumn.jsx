@@ -3,7 +3,7 @@
 function RoundColumn({ round }) {
   return (
     <section className="min-w-64 space-y-3">
-      <h3 className="font-display text-lg font-semibold text-cyan-200">{round.name}</h3>
+      <h3 className="font-display text-lg font-semibold text-primary-fixed">{round.name}</h3>
       {round.matches.map((match) => (
         <MatchCard key={match.id} match={match} />
       ))}
@@ -12,3 +12,4 @@ function RoundColumn({ round }) {
 }
 
 export default RoundColumn;
+

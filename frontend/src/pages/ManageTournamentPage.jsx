@@ -24,9 +24,9 @@ function ManageTournamentPage() {
         </div>
 
         <section className="grid gap-4 md:grid-cols-3">
-          <button className="rounded-xl bg-cyan-500 px-4 py-3 font-semibold text-slate-950 hover:bg-cyan-400">Start Next Round</button>
-          <button className="rounded-xl border border-slate-700 px-4 py-3 text-slate-100 hover:border-cyan-400">Seed Participants</button>
-          <button onClick={() => setConfirmOpen(true)} className="rounded-xl border border-rose-500/60 px-4 py-3 text-rose-200 hover:bg-rose-500/10">
+          <button className="rounded-xl bg-primary-container px-4 py-3 font-semibold text-on-primary hover:bg-primary">Start Next Round</button>
+          <button className="rounded-xl border border-outline-variant px-4 py-3 text-on-surface hover:border-primary-container">Seed Participants</button>
+          <button onClick={() => setConfirmOpen(true)} className="rounded-xl border border-error/60 px-4 py-3 text-error hover:bg-error/10">
             Close Registration
           </button>
         </section>
@@ -54,3 +54,6 @@ function ManageTournamentPage() {
 }
 
 export default ManageTournamentPage;
+
+
+

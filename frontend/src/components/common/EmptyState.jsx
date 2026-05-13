@@ -4,9 +4,9 @@ function EmptyState({ title, description, actionLabel, actionTo, onAction }) {
   const hasAction = Boolean(actionLabel);
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900 p-8 text-center">
+    <div className="rounded-2xl border border-outline-variant bg-surface-container-low p-8 text-center">
       <h3 className="font-display text-2xl font-semibold text-white">{title}</h3>
-      <p className="mx-auto mt-2 max-w-xl text-sm text-slate-400">{description}</p>
+      <p className="mx-auto mt-2 max-w-xl text-sm text-on-surface-variant">{description}</p>
 
       {hasAction && (
         <div className="mt-5">
@@ -30,3 +30,4 @@ function EmptyState({ title, description, actionLabel, actionTo, onAction }) {
 }
 
 export default EmptyState;
+

@@ -3,7 +3,7 @@
     <div className="soft-panel overflow-hidden">
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
-          <thead className="bg-slate-900/90 text-slate-300">
+          <thead className="bg-surface-container-low/90 text-on-surface-variant">
             <tr>
               <th className="px-4 py-3 text-left">#</th>
               <th className="px-4 py-3 text-left">Team</th>
@@ -14,10 +14,10 @@
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.rank} className="border-t border-slate-800 text-slate-200">
+              <tr key={row.rank} className="border-t border-outline-variant text-on-surface">
                 <td className="px-4 py-3 font-display text-base">{row.rank}</td>
                 <td className="px-4 py-3">{row.team}</td>
-                <td className="px-4 py-3 font-semibold text-cyan-300">{row.points}</td>
+                <td className="px-4 py-3 font-semibold text-primary-fixed">{row.points}</td>
                 <td className="px-4 py-3">{row.wins}</td>
                 <td className="px-4 py-3">{row.losses}</td>
               </tr>
@@ -30,3 +30,4 @@
 }
 
 export default LeaderboardTable;
+

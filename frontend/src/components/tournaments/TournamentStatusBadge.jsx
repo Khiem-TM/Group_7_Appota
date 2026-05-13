@@ -6,8 +6,8 @@
 
 const classes = {
   registration_open: "bg-lime-500/20 text-lime-300 border-lime-500/30",
-  in_progress: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
-  completed: "bg-slate-500/20 text-slate-300 border-slate-500/30"
+  in_progress: "bg-primary-container/20 text-primary-fixed border-primary-container/30",
+  completed: "bg-surface-bright/20 text-on-surface-variant border-outline-variant/40"
 };
 
 function TournamentStatusBadge({ status }) {
@@ -19,3 +19,5 @@ function TournamentStatusBadge({ status }) {
 }
 
 export default TournamentStatusBadge;
+
+
