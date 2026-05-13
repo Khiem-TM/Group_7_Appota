@@ -91,7 +91,7 @@ function TournamentDetailPage() {
                 key={tab.key}
                 type="button"
                 onClick={() => setActiveTab(tab.key)}
-                className={`w-full rounded-md px-5 py-3 text-left text-xl leading-tight tracking-tight transition ${
+                className={`w-full rounded-md px-4 py-2.5 text-left text-lg leading-tight tracking-tight transition ${
                   activeTab === tab.key
                     ? "bg-[#32353c] text-white"
                     : "text-[#c2c6d6] hover:bg-[#32353c]/60 hover:text-white"
@@ -105,7 +105,7 @@ function TournamentDetailPage() {
 
         <section className="px-6 py-8 lg:px-12 lg:py-10">
           <div className="flex flex-wrap items-center gap-4">
-            <h1 className="font-display text-4xl font-bold italic tracking-tight text-white md:text-5xl">{tournament.name}</h1>
+            <h1 className="font-display text-3xl font-bold italic tracking-tight text-white md:text-4xl">{tournament.name}</h1>
             <button
               type="button"
               className="inline-flex items-center justify-center rounded-full border border-[#424754] bg-[#32353c] px-6 py-3 text-[#e1e2ec] hover:bg-[#3c3f47]"
@@ -117,7 +117,7 @@ function TournamentDetailPage() {
           <div className="mt-5 h-1 w-28 bg-[#df7412]" />
 
           <div className="mt-8 rounded-2xl border border-[#424754] bg-[#191b23]/90 p-8 lg:flex lg:items-start lg:justify-between lg:gap-8">
-            <dl className="grid grid-cols-[130px_1fr] gap-x-8 gap-y-4 text-xl leading-tight md:text-2xl">
+            <dl className="grid grid-cols-[105px_1fr] gap-x-6 gap-y-3 text-base leading-tight md:grid-cols-[120px_1fr] md:text-xl">
               <dt className="text-[#c2c6d6]">Players</dt>
               <dd className="text-white">{tournament.participants}</dd>
               <dt className="text-[#c2c6d6]">Format</dt>
@@ -128,7 +128,7 @@ function TournamentDetailPage() {
               <dd className="text-white">{formatDateTime(tournament.startTime)}</dd>
             </dl>
 
-            <div className="mt-6 rounded-full bg-[#4a4d54] px-8 py-5 text-xl leading-tight lg:mt-0">
+            <div className="mt-6 rounded-full bg-[#4a4d54] px-7 py-4 text-lg leading-tight lg:mt-0">
               <p className="text-[#e1e2ec]">Organized by</p>
               <p className="mt-1 text-[#ff9b4a]">{tournament.organizer}</p>
             </div>
@@ -136,32 +136,32 @@ function TournamentDetailPage() {
 
           <div className="mt-10 space-y-8">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-              <h2 className="font-display text-4xl font-bold italic tracking-tight text-white md:text-5xl">
+              <h2 className="font-display text-3xl font-bold italic tracking-tight text-white md:text-4xl">
                 Manage Participants
               </h2>
               <div className="flex flex-wrap gap-3">
-                <button className="inline-flex items-center gap-2 rounded-full border border-[#424754] bg-[#4a4d54] px-6 py-3 text-base font-semibold text-[#e1e2ec] hover:bg-[#5a5d65]">
+                <button className="inline-flex items-center gap-2 rounded-full border border-[#424754] bg-[#4a4d54] px-5 py-2.5 text-sm font-semibold text-[#e1e2ec] hover:bg-[#5a5d65]">
                   <Shuffle size={16} /> Shuffle Seeds
                 </button>
-                <button className="inline-flex items-center gap-2 rounded-full border border-[#424754] bg-[#4a4d54] px-6 py-3 text-base font-semibold text-[#e1e2ec] hover:bg-[#5a5d65]">
+                <button className="inline-flex items-center gap-2 rounded-full border border-[#424754] bg-[#4a4d54] px-5 py-2.5 text-sm font-semibold text-[#e1e2ec] hover:bg-[#5a5d65]">
                   <ClipboardList size={16} /> Bulk Add
                 </button>
               </div>
             </div>
 
             <div className="rounded-2xl border border-[#424754] bg-[#191b23]/85 p-8">
-              <p className="text-lg text-[#e1e2ec] md:text-xl">
+              <p className="text-base text-[#e1e2ec] md:text-lg">
                 No participants yet. Add participants to start generating brackets.
               </p>
             </div>
 
             <div className="flex justify-end">
-              <button className="inline-flex items-center gap-2 rounded-full bg-[#df7412] px-8 py-3 text-lg font-bold italic text-white hover:bg-[#f28a2d]">
+              <button className="inline-flex items-center gap-2 rounded-full bg-[#df7412] px-7 py-3 text-base font-bold italic text-white hover:bg-[#f28a2d]">
                 <Plus size={20} /> Add Participant
               </button>
             </div>
 
-            <div className="rounded-xl border border-[#424754] bg-[#10131a]/75 p-5 text-sm text-[#c2c6d6] md:text-base">
+            <div className="rounded-xl border border-[#424754] bg-[#10131a]/75 p-5 text-sm text-[#c2c6d6]">
               <p className="inline-flex items-center gap-2">
                 <Swords size={16} className="text-[#adc6ff]" />
                 A bracket preview will be displayed once 2 or more participants are registered.
