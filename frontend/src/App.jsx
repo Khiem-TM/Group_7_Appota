@@ -17,6 +17,10 @@ function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
 
+      <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
+      <Route path="/explore" element={<Navigate to="/app/explore" replace />} />
+      <Route path="/tournaments/create" element={<Navigate to="/app/tournaments/create" replace />} />
+
       <Route path="/app" element={<DashboardLayout />}>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />

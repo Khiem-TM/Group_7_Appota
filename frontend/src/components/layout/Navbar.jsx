@@ -1,26 +1,45 @@
-﻿import { Bell, Search } from "lucide-react";
+﻿import { Compass, Home, LogIn, Trophy, UserPlus } from "lucide-react";
+import { Link, NavLink } from "react-router-dom";
 
 function Navbar() {
+  const navItems = [
+    { to: "/", label: "Home", icon: Home },
+    { to: "/explore", label: "Explore", icon: Compass },
+    { to: "/login", label: "Login", icon: LogIn },
+    { to: "/register", label: "Register", icon: UserPlus }
+  ];
+
   return (
-    <header className="sticky top-0 z-20 border-b border-slate-800 bg-ink/90 backdrop-blur">
+    <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-950/95 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-cyan-300">Operations Center</p>
-          <h1 className="font-display text-lg font-semibold text-slate-100">Tournament Bracket Generator</h1>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="hidden items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 md:flex">
-            <Search size={16} className="text-slate-400" />
-            <input
-              className="w-44 bg-transparent text-sm text-slate-200 outline-none placeholder:text-slate-500"
-              placeholder="Search tournaments..."
-            />
+        <Link to="/" className="inline-flex items-center gap-2 text-white">
+          <div className="rounded-xl bg-violet-500/20 p-2 text-violet-300">
+            <Trophy size={18} />
           </div>
-          <button className="relative rounded-xl border border-slate-700 bg-slate-900/70 p-2 text-slate-200 hover:border-cyan-400">
-            <Bell size={18} />
-            <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-orange-500" />
-          </button>
-        </div>
+          <span className="font-display text-lg font-semibold tracking-wide">Tournament Bracket Generator</span>
+        </Link>
+
+        <nav className="flex items-center gap-1 sm:gap-2">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) =>
+                  `inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm transition ${
+                    isActive
+                      ? "bg-slate-800 text-white"
+                      : "text-slate-300 hover:bg-slate-900 hover:text-white"
+                  }`
+                }
+              >
+                <Icon size={15} />
+                <span className="hidden sm:inline">{item.label}</span>
+              </NavLink>
+            );
+          })}
+        </nav>
       </div>
     </header>
   );
