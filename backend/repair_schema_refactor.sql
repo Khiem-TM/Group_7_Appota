@@ -13,6 +13,8 @@ ALTER TABLE announcements
     FOREIGN KEY (author_id) REFERENCES accounts(id);
 ALTER TABLE announcements
     ADD COLUMN IF NOT EXISTS is_pinned BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE announcements
+    DROP COLUMN IF EXISTS announcement_type;
 
 ALTER TABLE participants
     DROP CONSTRAINT IF EXISTS participants_user_id_fkey;

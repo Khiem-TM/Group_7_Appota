@@ -1,3 +1,4 @@
+import logging
 from typing import List
 
 import redis.asyncio as aioredis
@@ -11,6 +12,8 @@ from app.models.user import User
 from app.schemas.announcement import AnnouncementCreate, AnnouncementOut
 from app.services.announcement import create_announcement, list_announcements
 from app.services.realtime import publish_event
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/tournaments", tags=["announcements"])
 
@@ -38,15 +41,18 @@ async def post_announcement(
     current_user: User = Depends(require_host),
 ):
     ann = await create_announcement(db, tournament_id, current_user, data)
-    await publish_event(
-        redis,
-        tournament_id,
-        {
-            "type": "ANNOUNCEMENT",
-            "title": ann.title,
-            "content": ann.content,
-        },
-    )
+    try:
+        await publish_event(
+            redis,
+            tournament_id,
+            {
+                "type": "ANNOUNCEMENT",
+                "title": ann.title,
+                "content": ann.content,
+            },
+        )
+    except Exception:
+        logger.warning("Announcement created, but realtime publish failed", exc_info=True)
     return AnnouncementOut(
         **{k: v for k, v in ann.__dict__.items() if not k.startswith("_")},
         author_username=current_user.username,

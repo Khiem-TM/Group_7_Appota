@@ -52,3 +52,35 @@ class Match(Base, TimestampMixin):
     loser: Mapped[Optional["Participant"]] = relationship(
         "Participant", foreign_keys=[loser_id]
     )
+
+    @property
+    def bracket_type(self) -> str:
+        return self.bracket
+
+    @bracket_type.setter
+    def bracket_type(self, value: str) -> None:
+        self.bracket = value
+
+    @property
+    def score_player1(self) -> Optional[int]:
+        return self.score1
+
+    @score_player1.setter
+    def score_player1(self, value: Optional[int]) -> None:
+        self.score1 = value
+
+    @property
+    def score_player2(self) -> Optional[int]:
+        return self.score2
+
+    @score_player2.setter
+    def score_player2(self, value: Optional[int]) -> None:
+        self.score2 = value
+
+    @property
+    def next_match_id(self) -> None:
+        return None
+
+    @property
+    def loser_next_match_id(self) -> None:
+        return None
