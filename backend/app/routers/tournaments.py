@@ -8,7 +8,13 @@ from app.dependencies import get_current_user, require_host
 from app.models.user import User
 from app.schemas.common import MessageResponse
 from app.schemas.match import MatchOut
-from app.schemas.tournament import TournamentCreate, TournamentOut, TournamentUpdate
+from app.schemas.tournament import (
+    ParticipantOut,
+    TournamentCreate,
+    TournamentJoinByPlayer,
+    TournamentOut,
+    TournamentUpdate,
+)
 from app.services import bracket as bracket_service
 from app.services import match as match_service
 from app.services import tournament as tournament_service
@@ -118,6 +124,19 @@ async def join(
 ):
     await tournament_service.join_tournament(db, tournament_id, current_user)
     return MessageResponse(message="Joined tournament successfully")
+
+
+@router.post("/{tournament_id}/join-player", response_model=ParticipantOut)
+async def join_by_player(
+    tournament_id: int,
+    data: TournamentJoinByPlayer,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    participant = await tournament_service.join_tournament_by_player(
+        db, tournament_id, current_user, data.player_id
+    )
+    return ParticipantOut.model_validate(participant)
 
 
 @router.post("/{tournament_id}/leave", response_model=MessageResponse)

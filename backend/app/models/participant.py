@@ -16,6 +16,7 @@ class Participant(Base, TimestampMixin):
     __tablename__ = "participants"
     __table_args__ = (
         UniqueConstraint("tournament_id", "user_id", name="uq_participant"),
+        UniqueConstraint("tournament_id", "player_id", name="uq_participant_player"),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
@@ -23,6 +24,9 @@ class Participant(Base, TimestampMixin):
         BigInteger, ForeignKey("tournaments.id"), nullable=False
     )
     user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id"), nullable=False)
+    player_id: Mapped[Optional[int]] = mapped_column(
+        BigInteger, ForeignKey("players.id"), nullable=True
+    )
     seed: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     eliminated: Mapped[bool] = mapped_column(Boolean, default=False)
     placement: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)

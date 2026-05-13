@@ -4,9 +4,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import BadRequest, Conflict, NotFound
 from app.core.security import hash_password, verify_password
 from app.models.participant import Participant
+from app.models.player import Player
 from app.models.standing import Standing
 from app.models.user import User
-from app.schemas.user import ChangePasswordRequest, UpdateProfileRequest
+from app.schemas.user import ChangePasswordRequest, PlayerCreateRequest, UpdateProfileRequest
 
 
 async def get_user_by_id(db: AsyncSession, user_id: int) -> User:
@@ -56,3 +57,33 @@ async def get_user_stats(db: AsyncSession, user_id: int) -> dict:
         "total_tournaments_joined": total_joined.scalar() or 0,
         "total_wins": total_wins.scalar() or 0,
     }
+
+
+async def create_player(
+    db: AsyncSession,
+    creator: User,
+    data: PlayerCreateRequest,
+) -> Player:
+    player = Player(
+        display_name=data.display_name,
+        avatar_url=data.avatar_url,
+        created_by=creator.id,
+    )
+    db.add(player)
+    try:
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        raise
+    await db.refresh(player)
+    return player
+
+
+async def list_players(db: AsyncSession, page: int = 1, size: int = 20):
+    result = await db.execute(
+        select(Player)
+        .order_by(Player.created_at.desc())
+        .offset((page - 1) * size)
+        .limit(size)
+    )
+    return result.scalars().all()
