@@ -1,6 +1,8 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from typing import List
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.announcement import Announcement
 from app.models.user import User
 from app.schemas.announcement import AnnouncementCreate

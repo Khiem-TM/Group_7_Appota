@@ -1,8 +1,15 @@
-from sqlalchemy import BigInteger, Integer, Boolean, ForeignKey, UniqueConstraint
-from sqlalchemy.orm import mapped_column, Mapped, relationship
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
+from sqlalchemy import BigInteger, Boolean, ForeignKey, Integer, UniqueConstraint
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.database import Base
 from app.models.base import TimestampMixin
+
+if TYPE_CHECKING:
+    from app.models.standing import Standing
+    from app.models.tournament import Tournament
+    from app.models.user import User
 
 
 class Participant(Base, TimestampMixin):

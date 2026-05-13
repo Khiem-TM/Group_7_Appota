@@ -1,13 +1,15 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from typing import List
+
 import redis.asyncio as aioredis
-from app.database import get_db
+from fastapi import APIRouter, Depends
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.redis import get_redis
+from app.database import get_db
+from app.models.user import User
 from app.schemas.standing import StandingOut
 from app.services import standing as standing_service
-from app.models.user import User
 
 router = APIRouter(prefix="/tournaments", tags=["standings"])
 

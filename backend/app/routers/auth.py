@@ -1,13 +1,19 @@
+import redis.asyncio as aioredis
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-import redis.asyncio as aioredis
-from app.database import get_db
+
 from app.core.redis import get_redis
-from app.schemas.auth import RegisterRequest, LoginRequest, RefreshRequest, LogoutRequest
-from app.schemas.common import TokenResponse
-from app.services import auth as auth_service
+from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.user import User
+from app.schemas.auth import (
+    LoginRequest,
+    LogoutRequest,
+    RefreshRequest,
+    RegisterRequest,
+)
+from app.schemas.common import TokenResponse
+from app.services import auth as auth_service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 

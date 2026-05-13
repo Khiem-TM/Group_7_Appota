@@ -1,8 +1,14 @@
-from sqlalchemy import BigInteger, Integer, String, ForeignKey
-from sqlalchemy.orm import mapped_column, Mapped, relationship
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
+from sqlalchemy import BigInteger, ForeignKey, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.database import Base
 from app.models.base import TimestampMixin
+
+if TYPE_CHECKING:
+    from app.models.participant import Participant
+    from app.models.tournament import Tournament
 
 
 class Match(Base, TimestampMixin):

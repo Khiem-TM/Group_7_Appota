@@ -1,14 +1,16 @@
+from typing import List
+
+import redis.asyncio as aioredis
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List
-import redis.asyncio as aioredis
-from app.database import get_db
+
 from app.core.redis import get_redis
+from app.database import get_db
 from app.dependencies import require_host
+from app.models.user import User
 from app.schemas.announcement import AnnouncementCreate, AnnouncementOut
 from app.services.announcement import create_announcement, list_announcements
 from app.services.realtime import publish_event
-from app.models.user import User
 
 router = APIRouter(prefix="/tournaments", tags=["announcements"])
 

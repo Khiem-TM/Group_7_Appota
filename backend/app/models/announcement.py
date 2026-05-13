@@ -1,7 +1,14 @@
-from sqlalchemy import BigInteger, String, Text, ForeignKey
-from sqlalchemy.orm import mapped_column, Mapped, relationship
+from typing import TYPE_CHECKING
+
+from sqlalchemy import BigInteger, ForeignKey, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.database import Base
 from app.models.base import TimestampMixin
+
+if TYPE_CHECKING:
+    from app.models.tournament import Tournament
+    from app.models.user import User
 
 
 class Announcement(Base, TimestampMixin):

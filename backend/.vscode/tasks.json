@@ -1,0 +1,21 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "lint:ruff",
+      "type": "shell",
+      "command": "docker",
+      "args": ["compose", "run", "--rm", "lint"],
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "lint:ruff-fix",
+      "type": "shell",
+      "command": "docker",
+      "args": ["compose", "run", "--rm", "lint-fix"],
+      "group": "test",
+      "problemMatcher": []
+    }
+  ]
+}

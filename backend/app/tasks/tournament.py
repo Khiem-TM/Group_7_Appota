@@ -5,6 +5,7 @@ from app.celery_app import celery_app
 def auto_start_tournament(tournament_id: int):
     """Auto-start tournament when start_date is reached."""
     import asyncio
+
     from app.database import AsyncSessionLocal
     from app.services import tournament as ts
 
@@ -24,9 +25,10 @@ def auto_start_tournament(tournament_id: int):
 def rebuild_standings_cache(tournament_id: int):
     """Rebuild Redis standings cache for a tournament."""
     import asyncio
-    from app.database import AsyncSessionLocal
+
     from app.core.redis import init_redis, redis_client
-    from app.services.standing import get_standings, cache_standings
+    from app.database import AsyncSessionLocal
+    from app.services.standing import cache_standings, get_standings
 
     async def _run():
         await init_redis()

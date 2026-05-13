@@ -1,12 +1,14 @@
 import math
-from typing import List, Optional
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from itertools import combinations
+from typing import List, Optional
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.exceptions import BadRequest
 from app.models.match import Match
 from app.models.participant import Participant
 from app.models.tournament import Tournament
-from app.core.exceptions import BadRequest
 
 
 async def get_participants(db: AsyncSession, tournament_id: int) -> List[Participant]:

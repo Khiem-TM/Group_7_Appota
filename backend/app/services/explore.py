@@ -1,10 +1,12 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-from typing import Optional, List
-from app.models.tournament import Tournament
-from app.models.participant import Participant
 import json
+from typing import List, Optional
+
 import redis.asyncio as aioredis
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.participant import Participant
+from app.models.tournament import Tournament
 
 
 async def search_tournaments(

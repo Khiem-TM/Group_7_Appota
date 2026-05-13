@@ -1,15 +1,16 @@
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-from app.models.user import User
+
+from app.core.exceptions import BadRequest, Conflict, NotFound
+from app.core.security import hash_password, verify_password
 from app.models.participant import Participant
 from app.models.standing import Standing
-from app.schemas.user import UpdateProfileRequest, ChangePasswordRequest
-from app.core.security import verify_password, hash_password
-from app.core.exceptions import NotFound, BadRequest, Conflict
+from app.models.user import User
+from app.schemas.user import ChangePasswordRequest, UpdateProfileRequest
 
 
 async def get_user_by_id(db: AsyncSession, user_id: int) -> User:
-    result = await db.execute(select(User).where(User.id == user_id, User.is_active == True))
+    result = await db.execute(select(User).where(User.id == user_id, User.is_active))
     user = result.scalar_one_or_none()
     if not user:
         raise NotFound("User not found")

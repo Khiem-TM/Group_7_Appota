@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.database import get_db
 from app.dependencies import require_host
+from app.models.user import User
 from app.schemas.match import MatchOut, ReportMatchRequest
 from app.services import match as match_service
-from app.models.user import User
 
 router = APIRouter(prefix="/matches", tags=["matches"])
 

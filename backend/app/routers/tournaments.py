@@ -1,15 +1,17 @@
+from typing import List, Optional
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional
+
 from app.database import get_db
 from app.dependencies import get_current_user, require_host
-from app.schemas.tournament import TournamentCreate, TournamentUpdate, TournamentOut
+from app.models.user import User
 from app.schemas.common import MessageResponse
 from app.schemas.match import MatchOut
-from app.services import tournament as tournament_service
+from app.schemas.tournament import TournamentCreate, TournamentOut, TournamentUpdate
 from app.services import bracket as bracket_service
 from app.services import match as match_service
-from app.models.user import User
+from app.services import tournament as tournament_service
 
 router = APIRouter(prefix="/tournaments", tags=["tournaments"])
 

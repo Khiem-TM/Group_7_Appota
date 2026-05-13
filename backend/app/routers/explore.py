@@ -1,9 +1,11 @@
+from typing import List, Optional
+
+import redis.asyncio as aioredis
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional
-import redis.asyncio as aioredis
-from app.database import get_db
+
 from app.core.redis import get_redis
+from app.database import get_db
 from app.schemas.tournament import TournamentOut
 from app.services import explore as explore_service
 from app.services import tournament as tournament_service
