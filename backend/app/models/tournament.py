@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import BigInteger, Index, Integer, String, Text
+from sqlalchemy import BigInteger, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -23,7 +23,9 @@ class Tournament(Base, TimestampMixin):
     )
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    host_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    host_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("accounts.id"), nullable=False
+    )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     slug: Mapped[Optional[str]] = mapped_column(String(255), unique=True, nullable=True)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

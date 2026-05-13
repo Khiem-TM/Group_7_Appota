@@ -10,8 +10,9 @@ class UserOut(BaseModel):
     username: str
     role: str
     avatar_url: Optional[str]
-    bio: Optional[str]
-    country: Optional[str]
+    full_name: Optional[str] = None
+    bio: Optional[str] = None
+    country: Optional[str] = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -24,6 +25,7 @@ class UserProfileOut(UserOut):
 
 class UpdateProfileRequest(BaseModel):
     username: Optional[str] = None
+    full_name: Optional[str] = None
     bio: Optional[str] = None
     country: Optional[str] = None
     avatar_url: Optional[str] = None

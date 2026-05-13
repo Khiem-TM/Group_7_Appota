@@ -29,10 +29,8 @@ async def update_profile(db: AsyncSession, user: User, data: UpdateProfileReques
             raise Conflict("Username already taken")
         user.username = data.username
 
-    if data.bio is not None:
-        user.bio = data.bio
-    if data.country is not None:
-        user.country = data.country
+    if data.full_name is not None:
+        user.full_name = data.full_name
     if data.avatar_url is not None:
         user.avatar_url = data.avatar_url
 
@@ -53,7 +51,7 @@ async def get_user_stats(db: AsyncSession, user_id: int) -> dict:
         select(func.count()).select_from(Participant).where(Participant.user_id == user_id)
     )
     total_wins = await db.execute(
-        select(func.sum(Standing.wins))
+        select(func.sum(Standing.won))
         .join(Participant, Standing.participant_id == Participant.id)
         .where(Participant.user_id == user_id)
     )

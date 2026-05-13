@@ -14,7 +14,11 @@ async def get_standings(db: AsyncSession, tournament_id: int):
         select(Standing, Participant)
         .join(Participant, Standing.participant_id == Participant.id)
         .where(Standing.tournament_id == tournament_id)
-        .order_by(Standing.rank, Standing.points.desc(), Standing.score_diff.desc())
+        .order_by(
+            Standing.rank,
+            Standing.points.desc(),
+            (Standing.score_for - Standing.score_against).desc(),
+        )
     )
     return result.all()
 
@@ -23,24 +27,30 @@ async def update_standing_after_match(db: AsyncSession, match: Match):
     if not match.winner_id or not match.loser_id:
         return
 
-    score_diff = abs((match.score_player1 or 0) - (match.score_player2 or 0))
+    score1 = match.score1 or 0
+    score2 = match.score2 or 0
+    score_diff = abs(score1 - score2)
 
     winner_standing_result = await db.execute(
         select(Standing).where(Standing.participant_id == match.winner_id)
     )
     ws = winner_standing_result.scalar_one_or_none()
     if ws:
-        ws.wins += 1
+        ws.played += 1
+        ws.won += 1
         ws.points += 3
-        ws.score_diff += score_diff
+        ws.score_for += max(score1, score2)
+        ws.score_against += min(score1, score2)
 
     loser_standing_result = await db.execute(
         select(Standing).where(Standing.participant_id == match.loser_id)
     )
     ls = loser_standing_result.scalar_one_or_none()
     if ls:
-        ls.losses += 1
-        ls.score_diff -= score_diff
+        ls.played += 1
+        ls.lost += 1
+        ls.score_for += min(score1, score2)
+        ls.score_against += max(score1, score2)
 
     await db.commit()
     await recalculate_ranks(db, match.tournament_id)
@@ -52,8 +62,8 @@ async def recalculate_ranks(db: AsyncSession, tournament_id: int):
         .where(Standing.tournament_id == tournament_id)
         .order_by(
             Standing.points.desc(),
-            Standing.score_diff.desc(),
-            Standing.wins.desc(),
+            (Standing.score_for - Standing.score_against).desc(),
+            Standing.won.desc(),
         )
     )
     standings = result.scalars().all()

@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import BigInteger, Boolean, Integer, UniqueConstraint
+from sqlalchemy import BigInteger, Boolean, ForeignKey, Integer, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -23,7 +23,9 @@ class Participant(Base, TimestampMixin):
     tournament_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("tournaments.id"), nullable=False
     )
-    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id"), nullable=False)
+    user_id: Mapped[Optional[int]] = mapped_column(
+        BigInteger, ForeignKey("accounts.id"), nullable=True
+    )
     player_id: Mapped[Optional[int]] = mapped_column(
         BigInteger, ForeignKey("players.id"), nullable=True
     )
@@ -32,7 +34,7 @@ class Participant(Base, TimestampMixin):
     placement: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
     tournament: Mapped["Tournament"] = relationship("Tournament", back_populates="participants")
-    player: Mapped["Player"] = relationship("Player", back_populates="participations")
+    player: Mapped["Player"] = relationship("Player", back_populates="participants")
     standing: Mapped[Optional["Standing"]] = relationship(
         "Standing", back_populates="participant", uselist=False
     )

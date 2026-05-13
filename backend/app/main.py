@@ -1,5 +1,5 @@
 import asyncio
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -68,9 +68,14 @@ OPENAPI_TAGS = [
 async def lifespan(app: FastAPI):
     await init_redis()
     await create_tables()
-    asyncio.create_task(redis_subscriber(settings.REDIS_URL))
-    yield
-    await close_redis()
+    subscriber_task = asyncio.create_task(redis_subscriber(settings.REDIS_URL))
+    try:
+        yield
+    finally:
+        subscriber_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await subscriber_task
+        await close_redis()
 
 
 app = FastAPI(

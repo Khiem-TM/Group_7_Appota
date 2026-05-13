@@ -6,7 +6,13 @@ import FormatBadge from "./FormatBadge";
 function TournamentCard({ tournament }) {
   return (
     <article className="overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-low/75 shadow-lg">
-      <img src={tournament.banner} alt={tournament.name} className="h-36 w-full object-cover" />
+      {tournament.banner ? (
+        <img src={tournament.banner} alt={tournament.name} className="h-36 w-full object-cover" />
+      ) : (
+        <div className="flex h-36 w-full items-center justify-center bg-surface-container-highest text-on-surface-variant/40 text-4xl font-bold select-none">
+          {tournament.game ? tournament.game.slice(0, 2).toUpperCase() : "—"}
+        </div>
+      )}
       <div className="space-y-4 p-4">
         <div className="flex flex-wrap items-center gap-2">
           <TournamentStatusBadge status={tournament.status} />

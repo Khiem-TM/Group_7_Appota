@@ -1,36 +1,53 @@
-﻿import { UserPlus } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 
 function RegisterForm() {
   const navigate = useNavigate();
+  const { register } = useAuth();
   const [form, setForm] = useState({
-    fullName: "",
     username: "",
     email: "",
     password: "",
     confirmPassword: "",
     acceptedTerms: false
   });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    navigate("/dashboard");
+    setError("");
+
+    if (form.password !== form.confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await register(form.email, form.username, form.password, "HOST");
+      navigate("/app/dashboard");
+    } catch (err) {
+      const detail = err.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        setError(detail.map((d) => d.msg).join(" "));
+      } else {
+        setError(typeof detail === "string" ? detail : "Registration failed. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="text-xs uppercase tracking-[0.14em] text-on-surface-variant">Full name</label>
-        <input
-          type="text"
-          required
-          value={form.fullName}
-          onChange={(event) => setForm({ ...form, fullName: event.target.value })}
-          placeholder="Nguyen Van A"
-          className="mt-2 w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-base text-white outline-none placeholder:text-on-surface-variant/80 focus:border-primary-container"
-        />
-      </div>
+      {error ? (
+        <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-400">
+          {error}
+        </p>
+      ) : null}
 
       <div>
         <label className="text-xs uppercase tracking-[0.14em] text-on-surface-variant">Username</label>
@@ -94,10 +111,11 @@ function RegisterForm() {
 
       <button
         type="submit"
-        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 px-4 py-3 text-base font-semibold text-white hover:from-blue-400 hover:to-violet-400"
+        disabled={loading}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 px-4 py-3 text-base font-semibold text-white hover:from-blue-400 hover:to-violet-400 disabled:opacity-60"
       >
         <UserPlus size={17} />
-        Register
+        {loading ? "Creating account…" : "Register"}
       </button>
 
       <p className="text-center text-base text-on-surface-variant">
@@ -111,5 +129,3 @@ function RegisterForm() {
 }
 
 export default RegisterForm;
-
-

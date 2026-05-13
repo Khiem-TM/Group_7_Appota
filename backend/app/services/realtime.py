@@ -1,8 +1,12 @@
+import asyncio
 import json
+import logging
 from typing import Dict, Set
 
 import redis.asyncio as aioredis
 from fastapi import WebSocket
+
+logger = logging.getLogger(__name__)
 
 
 class ConnectionManager:
@@ -45,17 +49,26 @@ async def publish_event(redis: aioredis.Redis, tournament_id: int, event: dict):
 
 async def redis_subscriber(redis_url: str):
     """Background task: listen Redis pub/sub and broadcast to WebSocket clients."""
-    r = aioredis.from_url(redis_url, decode_responses=True)
-    pubsub = r.pubsub()
-    await pubsub.psubscribe("tournament:*")
-
-    async for message in pubsub.listen():
-        if message["type"] != "pmessage":
-            continue
+    while True:
+        r = aioredis.from_url(redis_url, decode_responses=True)
+        pubsub = r.pubsub()
         try:
-            channel: str = message["channel"]
-            tournament_id = int(channel.split(":")[1])
-            data = json.loads(message["data"])
-            await manager.broadcast(tournament_id, data)
-        except Exception:
-            pass
+            await pubsub.psubscribe("tournament:*")
+            async for message in pubsub.listen():
+                if message["type"] != "pmessage":
+                    continue
+                try:
+                    channel: str = message["channel"]
+                    tournament_id = int(channel.split(":")[1])
+                    data = json.loads(message["data"])
+                    await manager.broadcast(tournament_id, data)
+                except Exception:
+                    logger.exception("Failed to handle realtime Redis message")
+        except asyncio.CancelledError:
+            raise
+        except (aioredis.ConnectionError, OSError):
+            logger.warning("Redis subscriber disconnected; retrying in 5 seconds")
+            await asyncio.sleep(5)
+        finally:
+            await pubsub.aclose()
+            await r.aclose()

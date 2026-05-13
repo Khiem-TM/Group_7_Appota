@@ -1,42 +1,14 @@
-﻿import { Search, Swords } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Search, Swords } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { listTournaments, toDisplayStatus } from "../api/tournaments";
+import { useAuth } from "../contexts/AuthContext";
 
 const statusTabs = [
   { key: "all", label: "All" },
   { key: "pending", label: "Pending" },
   { key: "in_progress", label: "In Progress" },
   { key: "complete", label: "Complete" }
-];
-
-const mockMyTournaments = [
-  {
-    id: "nebula-open",
-    name: "Nebula Open",
-    game: "Valorant",
-    status: "in_progress",
-    participants: 64,
-    maxParticipants: 64,
-    date: "May 20, 2026"
-  },
-  {
-    id: "weekend-clash",
-    name: "Weekend Clash",
-    game: "CS2",
-    status: "pending",
-    participants: 18,
-    maxParticipants: 32,
-    date: "May 25, 2026"
-  },
-  {
-    id: "spring-showdown",
-    name: "Spring Showdown",
-    game: "League of Legends",
-    status: "complete",
-    participants: 32,
-    maxParticipants: 32,
-    date: "Apr 30, 2026"
-  }
 ];
 
 const statusClassMap = {
@@ -52,19 +24,42 @@ const statusLabelMap = {
 };
 
 function DashboardPage() {
+  const { user } = useAuth();
   const [query, setQuery] = useState("");
   const [activeStatus, setActiveStatus] = useState("all");
+  const [tournaments, setTournaments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      setError("");
+      try {
+        const data = await listTournaments(1, 100);
+        const myTournaments = user
+          ? data.filter((t) => t.host_id === user.id)
+          : data;
+        setTournaments(myTournaments);
+      } catch {
+        setError("Failed to load tournaments.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [user]);
 
   const filteredTournaments = useMemo(() => {
-    return mockMyTournaments.filter((tournament) => {
-      const matchesStatus = activeStatus === "all" ? true : tournament.status === activeStatus;
-      const matchesQuery = `${tournament.name} ${tournament.game}`
+    return tournaments.filter((t) => {
+      const displayStatus = toDisplayStatus(t.status);
+      const matchesStatus = activeStatus === "all" || displayStatus === activeStatus;
+      const matchesQuery = `${t.name} ${t.game || ""}`
         .toLowerCase()
         .includes(query.toLowerCase().trim());
-
       return matchesStatus && matchesQuery;
     });
-  }, [activeStatus, query]);
+  }, [tournaments, activeStatus, query]);
 
   return (
     <div className="space-y-5">
@@ -109,40 +104,65 @@ function DashboardPage() {
         </div>
       </div>
 
-      {filteredTournaments.length === 0 ? (
+      {loading ? (
+        <div className="flex min-h-[200px] items-center justify-center text-on-surface-variant">
+          Loading tournaments…
+        </div>
+      ) : error ? (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400">{error}</div>
+      ) : filteredTournaments.length === 0 ? (
         <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-outline-variant bg-surface-container-low/70">
           <div className="text-center">
             <div className="mx-auto mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-outline-variant bg-surface-container-highest text-on-surface-variant">
               <Swords size={18} />
             </div>
             <h2 className="text-3xl font-semibold text-white">No Tournaments Found</h2>
-            <p className="mt-2 text-sm text-on-surface-variant">You don&apos;t have any tournaments matching this criteria.</p>
+            <p className="mt-2 text-sm text-on-surface-variant">
+              {tournaments.length === 0
+                ? "You haven't created any tournaments yet."
+                : "No tournaments match this criteria."}
+            </p>
           </div>
         </div>
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
-          {filteredTournaments.map((tournament) => (
-            <article key={tournament.id} className="rounded-2xl border border-outline-variant bg-surface-container-low p-5">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h2 className="text-2xl font-semibold text-white">{tournament.name}</h2>
-                  <p className="mt-1 text-sm text-on-surface-variant">{tournament.game} • {tournament.date}</p>
+          {filteredTournaments.map((t) => {
+            const displayStatus = toDisplayStatus(t.status);
+            return (
+              <article key={t.id} className="rounded-2xl border border-outline-variant bg-surface-container-low p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h2 className="text-2xl font-semibold text-white">{t.name}</h2>
+                    <p className="mt-1 text-sm text-on-surface-variant">
+                      {t.game || "No game"} • {t.start_date || "TBD"}
+                    </p>
+                  </div>
+                  <span className={`rounded-full border px-3 py-1 text-xs font-medium ${statusClassMap[displayStatus]}`}>
+                    {statusLabelMap[displayStatus]}
+                  </span>
                 </div>
-                <span
-                  className={`rounded-full border px-3 py-1 text-xs font-medium ${statusClassMap[tournament.status]}`}
-                >
-                  {statusLabelMap[tournament.status]}
-                </span>
-              </div>
-
-              <div className="mt-4 flex items-center justify-between text-sm text-on-surface-variant">
-                <span>Players: {tournament.participants}/{tournament.maxParticipants}</span>
-                <Link to={`/app/tournaments/${tournament.id}`} className="text-primary-fixed-dim hover:text-primary-fixed">
-                  View Details
-                </Link>
-              </div>
-            </article>
-          ))}
+                <div className="mt-4 flex items-center justify-between text-sm text-on-surface-variant">
+                  <span>
+                    Players: {t.participant_count}/{t.max_players}
+                  </span>
+                  <div className="flex gap-3">
+                    <Link
+                      to={`/app/tournaments/${t.id}/manage`}
+                      className="text-amber-400 hover:text-amber-300"
+                    >
+                      Manage
+                    </Link>
+                    <Link
+                      to={`/app/tournaments/${t.id}`}
+                      className="text-primary-fixed-dim hover:text-primary-fixed"
+                    >
+                      View
+                    </Link>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
         </div>
       )}
     </div>
@@ -150,5 +170,3 @@ function DashboardPage() {
 }
 
 export default DashboardPage;
-
-

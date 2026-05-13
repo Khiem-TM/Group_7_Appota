@@ -1,18 +1,38 @@
-﻿import { LogIn } from "lucide-react";
+import { LogIn } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 
 function LoginForm() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [form, setForm] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    navigate("/dashboard");
+    setError("");
+    setLoading(true);
+    try {
+      await login(form.email, form.password);
+      navigate("/app/dashboard");
+    } catch (err) {
+      const detail = err.response?.data?.detail;
+      setError(typeof detail === "string" ? detail : "Invalid email or password.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      {error ? (
+        <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-400">
+          {error}
+        </p>
+      ) : null}
+
       <div>
         <label className="text-xs uppercase tracking-[0.14em] text-on-surface-variant">Email</label>
         <input
@@ -42,10 +62,11 @@ function LoginForm() {
 
       <button
         type="submit"
-        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 px-4 py-3 text-base font-semibold text-white hover:from-blue-400 hover:to-violet-400"
+        disabled={loading}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 px-4 py-3 text-base font-semibold text-white hover:from-blue-400 hover:to-violet-400 disabled:opacity-60"
       >
         <LogIn size={17} />
-        Login
+        {loading ? "Signing in…" : "Login"}
       </button>
 
       <p className="text-center text-base text-on-surface-variant">
@@ -59,4 +80,3 @@ function LoginForm() {
 }
 
 export default LoginForm;
-

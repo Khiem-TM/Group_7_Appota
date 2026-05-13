@@ -15,7 +15,8 @@ class AnnouncementOut(BaseModel):
     author_id: int
     title: str
     content: str
-    announcement_type: str
+    announcement_type: str = "GENERAL"
+    is_pinned: bool = False
     created_at: datetime
     author_username: str = ""
 

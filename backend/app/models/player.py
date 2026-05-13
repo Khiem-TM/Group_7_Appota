@@ -18,7 +18,7 @@ class Player(Base, TimestampMixin):
     display_name: Mapped[str] = mapped_column(String(255), nullable=False)
     avatar_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_by: Mapped[Optional[int]] = mapped_column(
-        BigInteger, ForeignKey("users.id"), nullable=True
+        BigInteger, ForeignKey("accounts.id"), nullable=True
     )
 
     creator: Mapped[Optional["User"]] = relationship("User")

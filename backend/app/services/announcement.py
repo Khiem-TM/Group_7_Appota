@@ -19,7 +19,6 @@ async def create_announcement(
         author_id=author.id,
         title=data.title,
         content=data.content,
-        announcement_type=data.announcement_type.upper(),
     )
     db.add(ann)
     await db.commit()

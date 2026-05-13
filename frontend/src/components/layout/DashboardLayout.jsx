@@ -1,12 +1,20 @@
-﻿import { Bell, CircleUserRound, Search } from "lucide-react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Bell, CircleUserRound, LogOut, Search } from "lucide-react";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 import MobileNav from "./MobileNav";
 import Sidebar from "./Sidebar";
 
 function DashboardLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const basePath = location.pathname.startsWith("/app") ? "/app" : "";
   const hideSidebar = location.pathname.startsWith(`${basePath}/tournaments/`);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
+  };
 
   return (
     <div className="min-h-screen bg-surface text-white">
@@ -25,6 +33,11 @@ function DashboardLayout() {
               </div>
 
               <div className="ml-auto flex items-center gap-2">
+                {user ? (
+                  <span className="hidden text-sm text-on-surface-variant sm:block">
+                    @{user.username}
+                  </span>
+                ) : null}
                 <button
                   type="button"
                   className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-outline-variant bg-surface-container-low text-on-surface-variant hover:text-white"
@@ -33,9 +46,18 @@ function DashboardLayout() {
                 </button>
                 <button
                   type="button"
+                  onClick={() => navigate("/app/profile")}
                   className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-outline-variant bg-surface-container-low text-on-surface-variant hover:text-white"
                 >
                   <CircleUserRound size={15} />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  title="Logout"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-outline-variant bg-surface-container-low text-on-surface-variant hover:text-red-400"
+                >
+                  <LogOut size={15} />
                 </button>
               </div>
             </div>
@@ -53,4 +75,3 @@ function DashboardLayout() {
 }
 
 export default DashboardLayout;
-

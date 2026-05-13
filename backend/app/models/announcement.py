@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import BigInteger, String, Text
+from sqlalchemy import BigInteger, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -15,8 +15,12 @@ class Announcement(Base, TimestampMixin):
     __tablename__ = "announcements"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    tournament_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
-    author_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    tournament_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("tournaments.id"), nullable=False
+    )
+    author_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("accounts.id"), nullable=False
+    )
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     is_pinned: Mapped[bool] = mapped_column(default=False)
