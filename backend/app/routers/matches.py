@@ -13,7 +13,7 @@ router = APIRouter(prefix="/matches", tags=["matches"])
 @router.get("/{match_id}", response_model=MatchOut)
 async def get_match(match_id: int, db: AsyncSession = Depends(get_db)):
     m = await match_service.get_match(db, match_id)
-    return MatchOut(**{k: v for k, v in m.__dict__.items() if not k.startswith("_")})
+    return MatchOut.model_validate(m)
 
 
 @router.post("/{match_id}/report", response_model=MatchOut)
@@ -24,4 +24,4 @@ async def report_score(
     current_user: User = Depends(require_host),
 ):
     m = await match_service.report_match(db, match_id, current_user.id, data)
-    return MatchOut(**{k: v for k, v in m.__dict__.items() if not k.startswith("_")})
+    return MatchOut.model_validate(m)

@@ -132,7 +132,7 @@ async def generate_bracket(
     if t.host_id != current_user.id:
         raise Forbidden("Only host can generate bracket")
     matches = await bracket_service.generate_bracket(db, t)
-    return [MatchOut(**{k: v for k, v in m.__dict__.items() if not k.startswith("_")}) for m in matches]
+    return [MatchOut.model_validate(m) for m in matches]
 
 
 class ParticipantDetailOut(BaseModel):
@@ -238,7 +238,7 @@ async def get_matches(tournament_id: int, db: AsyncSession = Depends(get_db)):
 
     result = []
     for m in matches:
-        data = {k: v for k, v in m.__dict__.items() if not k.startswith("_")}
+        data = MatchOut.model_validate(m).model_dump()
         data["player1_name"] = name_map.get(m.player1_id) if m.player1_id else None
         data["player2_name"] = name_map.get(m.player2_id) if m.player2_id else None
         result.append(MatchOut(**data))
