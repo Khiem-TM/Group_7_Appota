@@ -1,7 +1,8 @@
-from fastapi import WebSocket
-from typing import Dict, Set
 import json
+from typing import Dict, Set
+
 import redis.asyncio as aioredis
+from fastapi import WebSocket
 
 
 class ConnectionManager:

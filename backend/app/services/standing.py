@@ -1,10 +1,12 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from app.models.standing import Standing
-from app.models.participant import Participant
-from app.models.match import Match
 import json
+
 import redis.asyncio as aioredis
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.match import Match
+from app.models.participant import Participant
+from app.models.standing import Standing
 
 
 async def get_standings(db: AsyncSession, tournament_id: int):

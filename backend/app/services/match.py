@@ -1,12 +1,12 @@
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.exceptions import BadRequest, Forbidden, NotFound
 from app.models.match import Match
-from app.models.tournament import Tournament
 from app.schemas.match import ReportMatchRequest
-from app.core.exceptions import NotFound, Forbidden, BadRequest
 from app.services.bracket import propagate_match_result
-from app.services.standing import update_standing_after_match
 from app.services.realtime import publish_event
+from app.services.standing import update_standing_after_match
 
 
 async def get_match(db: AsyncSession, match_id: int) -> Match:

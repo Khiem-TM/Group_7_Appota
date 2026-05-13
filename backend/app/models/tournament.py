@@ -1,8 +1,17 @@
-from sqlalchemy import String, Text, BigInteger, Integer, ForeignKey, Index
-from sqlalchemy.orm import mapped_column, Mapped, relationship
-from typing import Optional, List
+from typing import TYPE_CHECKING, List, Optional
+
+from sqlalchemy import BigInteger, Index, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.database import Base
 from app.models.base import TimestampMixin
+
+if TYPE_CHECKING:
+    from app.models.announcement import Announcement
+    from app.models.match import Match
+    from app.models.participant import Participant
+    from app.models.standing import Standing
+    from app.models.user import User
 
 
 class Tournament(Base, TimestampMixin):
@@ -14,12 +23,11 @@ class Tournament(Base, TimestampMixin):
     )
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    host_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id"), nullable=False)
+    host_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     slug: Mapped[Optional[str]] = mapped_column(String(255), unique=True, nullable=True)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="DRAFT")
-    # SINGLE_ELIMINATION, DOUBLE_ELIMINATION, ROUND_ROBIN, SWISS
     format: Mapped[str] = mapped_column(String(50), nullable=False)
     visibility: Mapped[str] = mapped_column(String(20), nullable=False, default="PUBLIC")
     max_players: Mapped[int] = mapped_column(Integer, nullable=False, default=16)
@@ -28,7 +36,7 @@ class Tournament(Base, TimestampMixin):
     rules: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     start_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     bracket_generated: Mapped[bool] = mapped_column(default=False)
-
+    
     host: Mapped["User"] = relationship(
         "User", back_populates="tournaments_hosted", foreign_keys=[host_id]
     )

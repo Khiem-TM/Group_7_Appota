@@ -37,6 +37,20 @@ services:
         condition: service_healthy
     command: celery -A app.celery_app worker --loglevel=info
 
+  lint:
+    build: .
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: sh -lc 'cd /app && ruff check . --config pyproject.toml'
+
+  lint-fix:
+    build: .
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: sh -lc 'cd /app && ruff check . --fix --config pyproject.toml'
+
   postgres:
     image: postgres:16-alpine
     environment:
@@ -56,7 +70,7 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis_data:/data
     healthcheck:

@@ -1,10 +1,11 @@
 import asyncio
 from logging.config import fileConfig
+
 from sqlalchemy.ext.asyncio import create_async_engine
+
 from alembic import context
 from app.core.config import settings
 from app.database import Base
-import app.models  # noqa: import all models to register with metadata
 
 config = context.config
 

@@ -1,16 +1,17 @@
-from sqlalchemy.ext.asyncio import AsyncSession
+import redis.asyncio as aioredis
 from sqlalchemy import select
-from app.models.user import User
-from app.schemas.auth import RegisterRequest, LoginRequest
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.exceptions import BadRequest, Conflict, Unauthorized
 from app.core.security import (
-    hash_password,
-    verify_password,
     create_access_token,
     create_refresh_token,
     decode_token,
+    hash_password,
+    verify_password,
 )
-from app.core.exceptions import Conflict, Unauthorized, BadRequest
-import redis.asyncio as aioredis
+from app.models.user import User
+from app.schemas.auth import LoginRequest, RegisterRequest
 
 REFRESH_TTL_SECONDS = 7 * 24 * 3600
 
@@ -41,7 +42,7 @@ async def register(db: AsyncSession, redis: aioredis.Redis, data: RegisterReques
 
 async def login(db: AsyncSession, redis: aioredis.Redis, data: LoginRequest):
     result = await db.execute(
-        select(User).where(User.email == data.email, User.is_active == True)
+        select(User).where(User.email == data.email, User.is_active)
     )
     user = result.scalar_one_or_none()
     if not user or not verify_password(data.password, user.password_hash):
@@ -65,7 +66,7 @@ async def refresh(db: AsyncSession, redis: aioredis.Redis, refresh_token: str):
         raise Unauthorized("Refresh token revoked or invalid")
 
     result = await db.execute(
-        select(User).where(User.id == user_id, User.is_active == True)
+        select(User).where(User.id == user_id, User.is_active)
     )
     user = result.scalar_one_or_none()
     if not user:

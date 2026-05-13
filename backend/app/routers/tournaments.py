@@ -1,15 +1,33 @@
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
+
+from fastapi import APIRouter, Depends, Query
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.database import get_db
 from app.dependencies import get_current_user, require_host
-from app.schemas.tournament import TournamentCreate, TournamentUpdate, TournamentOut
+from app.models.user import User
 from app.schemas.common import MessageResponse
 from app.schemas.match import MatchOut
-from app.services import tournament as tournament_service
+from app.schemas.tournament import TournamentCreate, TournamentOut, TournamentUpdate
 from app.services import bracket as bracket_service
 from app.services import match as match_service
-from app.models.user import User
+from app.services import tournament as tournament_service
+
+
+class AddParticipantRequest(BaseModel):
+    player_name: str
+
+
+class ParticipantOut(BaseModel):
+    id: int
+    tournament_id: int
+    player_id: int
+    seed: Optional[int] = None
+    eliminated: bool = False
+    placement: Optional[int] = None
+
+    model_config = {"from_attributes": True}
 
 router = APIRouter(prefix="/tournaments", tags=["tournaments"])
 
@@ -116,6 +134,18 @@ async def join(
 ):
     await tournament_service.join_tournament(db, tournament_id, current_user)
     return MessageResponse(message="Joined tournament successfully")
+
+
+@router.post("/{tournament_id}/participants", response_model=ParticipantOut, status_code=201)
+async def add_participant(
+    tournament_id: int,
+    data: AddParticipantRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_host),
+):
+    """Host adds a participant to tournament"""
+    p = await tournament_service.add_participant(db, tournament_id, current_user.id, data.player_name)
+    return ParticipantOut(**{k: v for k, v in p.__dict__.items() if not k.startswith("_")})
 
 
 @router.post("/{tournament_id}/leave", response_model=MessageResponse)
