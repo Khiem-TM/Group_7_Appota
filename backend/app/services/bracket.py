@@ -248,7 +248,10 @@ async def generate_swiss_next_round(
         select(Standing, Participant)
         .join(Participant, Standing.participant_id == Participant.id)
         .where(Standing.tournament_id == tournament_id)
-        .order_by(Standing.points.desc(), Standing.score_diff.desc())
+                .order_by(
+                    Standing.points.desc(),
+                    (Standing.score_for - Standing.score_against).desc(),
+                )
     )
     rows = result.all()
     participants = [r.Participant for r in rows]
@@ -303,39 +306,12 @@ async def propagate_match_result(
     if not match.winner_id or not match.loser_id:
         return
 
-    if match.next_match_id:
-        next_match_result = await db.execute(
-            select(Match).where(Match.id == match.next_match_id)
-        )
-        next_match = next_match_result.scalar_one_or_none()
-        if next_match:
-            if next_match.player1_id is None:
-                next_match.player1_id = match.winner_id
-            else:
-                next_match.player2_id = match.winner_id
-            if next_match.player1_id and next_match.player2_id:
-                next_match.status = "READY"
-
-    if match.loser_next_match_id and tournament.format == "DOUBLE_ELIMINATION":
+    if tournament.format in ("SINGLE_ELIMINATION", "DOUBLE_ELIMINATION"):
         loser_result = await db.execute(
-            select(Match).where(Match.id == match.loser_next_match_id)
+            select(Participant).where(Participant.id == match.loser_id)
         )
-        loser_match = loser_result.scalar_one_or_none()
-        if loser_match:
-            if loser_match.player1_id is None:
-                loser_match.player1_id = match.loser_id
-            else:
-                loser_match.player2_id = match.loser_id
-            if loser_match.player1_id and loser_match.player2_id:
-                loser_match.status = "READY"
-    elif tournament.format in ("SINGLE_ELIMINATION", "DOUBLE_ELIMINATION"):
-        # Mark loser as eliminated (when no loser bracket)
-        if not match.loser_next_match_id:
-            loser_result = await db.execute(
-                select(Participant).where(Participant.id == match.loser_id)
-            )
-            loser_participant = loser_result.scalar_one_or_none()
-            if loser_participant:
-                loser_participant.eliminated = True
+        loser_participant = loser_result.scalar_one_or_none()
+        if loser_participant:
+            loser_participant.eliminated = True
 
     await db.commit()
