@@ -1,45 +1,41 @@
-﻿import { Compass, Gauge, PlusSquare, UserCircle2 } from "lucide-react";
-import { NavLink } from "react-router-dom";
-
-const navItems = [
-  { to: "/dashboard", label: "Dashboard", icon: Gauge },
-  { to: "/explore", label: "Explore Tournaments", icon: Compass },
-  { to: "/tournaments/create", label: "Create Tournament", icon: PlusSquare },
-  { to: "/profile", label: "Profile", icon: UserCircle2 }
-];
+﻿import { Trophy } from "lucide-react";
+import { Link, NavLink } from "react-router-dom";
 
 function Sidebar({ basePath = "" }) {
   return (
-    <aside className="hidden w-72 shrink-0 border-r border-slate-800 bg-slate-950 lg:block">
-      <div className="flex h-full flex-col p-5">
-        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
-          <p className="text-xs uppercase tracking-[0.22em] text-cyan-400">Control Room</p>
-          <h2 className="mt-2 font-display text-xl font-semibold text-white">Tournament Hub</h2>
-          <p className="mt-1 text-xs text-slate-400">Manage brackets, rounds, and participants</p>
+    <aside className="hidden w-64 shrink-0 border-r border-slate-800 bg-[#060b16] lg:block">
+      <div className="flex h-full flex-col">
+        <div className="border-b border-slate-800 px-5 py-4">
+          <Link to="/" className="font-display text-2xl font-semibold text-cyan-300">
+            Arena Pro
+          </Link>
         </div>
 
-        <nav className="mt-6 space-y-2">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const target = `${basePath}${item.to}`;
-            return (
-              <NavLink
-                key={item.to}
-                to={target}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition ${
-                    isActive
-                      ? "border border-violet-500/40 bg-violet-500/10 text-white"
-                      : "border border-transparent text-slate-300 hover:border-slate-700 hover:bg-slate-900 hover:text-white"
-                  }`
-                }
-              >
-                <Icon size={17} className="text-cyan-400" />
-                {item.label}
-              </NavLink>
-            );
-          })}
-        </nav>
+        <div className="flex-1 px-4 py-4">
+          <NavLink
+            to={`${basePath}/dashboard`}
+            className={({ isActive }) =>
+              `group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition ${
+                isActive
+                  ? "bg-slate-200/10 text-white"
+                  : "text-slate-300 hover:bg-slate-900 hover:text-white"
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <span
+                  className={`inline-flex h-5 w-5 items-center justify-center rounded ${
+                    isActive ? "bg-slate-100/10 text-cyan-300" : "text-slate-400 group-hover:text-cyan-300"
+                  }`}
+                >
+                  <Trophy size={14} />
+                </span>
+                <span className="text-[13px] font-medium">Your Tournaments</span>
+              </>
+            )}
+          </NavLink>
+        </div>
       </div>
     </aside>
   );

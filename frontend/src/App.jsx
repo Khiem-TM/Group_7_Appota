@@ -19,13 +19,15 @@ function App() {
 
       <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
       <Route path="/explore" element={<Navigate to="/app/explore" replace />} />
-      <Route path="/tournaments/create" element={<Navigate to="/app/tournaments/create" replace />} />
+      <Route path="/tournaments/new" element={<Navigate to="/app/tournaments/new" replace />} />
+      <Route path="/tournaments/create" element={<Navigate to="/app/tournaments/new" replace />} />
 
       <Route path="/app" element={<DashboardLayout />}>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="explore" element={<ExploreTournamentsPage />} />
-        <Route path="tournaments/create" element={<CreateTournamentPage />} />
+        <Route path="tournaments/new" element={<CreateTournamentPage />} />
+        <Route path="tournaments/create" element={<Navigate to="/app/tournaments/new" replace />} />
         <Route path="tournaments/:id" element={<TournamentDetailPage />} />
         <Route path="tournaments/:id/manage" element={<ManageTournamentPage />} />
         <Route path="profile" element={<ProfilePage />} />

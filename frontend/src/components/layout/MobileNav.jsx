@@ -4,7 +4,7 @@ import { NavLink } from "react-router-dom";
 const tabs = [
   { to: "/dashboard", icon: Gauge, label: "Dashboard" },
   { to: "/explore", icon: Compass, label: "Explore" },
-  { to: "/tournaments/create", icon: PlusSquare, label: "Create" },
+  { to: "/tournaments/new", icon: PlusSquare, label: "Create" },
   { to: "/profile", icon: UserCircle2, label: "Profile" }
 ];
 
