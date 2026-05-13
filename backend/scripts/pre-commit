@@ -1,0 +1,12 @@
+#!/bin/sh
+set -e
+
+repo_root=$(git rev-parse --show-toplevel)
+backend_dir="$repo_root/backend"
+
+if [ ! -f "$backend_dir/docker-compose.yml" ]; then
+	echo "backend docker-compose.yml not found"
+	exit 1
+fi
+
+docker compose -f "$backend_dir/docker-compose.yml" run --rm lint
