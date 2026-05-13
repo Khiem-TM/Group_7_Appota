@@ -1,0 +1,5 @@
+﻿node_modules/
+dist/
+DESIGN.md
+.env
+.env.local

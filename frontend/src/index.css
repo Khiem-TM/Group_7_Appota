@@ -1,0 +1,33 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply min-h-screen bg-surface text-on-surface;
+  margin: 0;
+  font-family: "Geist", sans-serif;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.soft-panel {
+  @apply rounded-2xl border border-outline-variant bg-surface-container-low/80 backdrop-blur;
+}
+
+.page-title {
+  @apply font-display text-2xl font-semibold tracking-tight text-on-surface;
+}
+
+.page-subtitle {
+  @apply mt-1 text-sm text-on-surface-variant;
+}
+
+.gradient-text {
+  @apply bg-gradient-to-r from-primary-container via-primary-fixed-dim to-tertiary-container bg-clip-text text-transparent;
+}
