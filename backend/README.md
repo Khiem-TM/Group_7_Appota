@@ -108,3 +108,14 @@ docker compose run --rm lint-fix
 ```
 
 If you prefer VS Code, run the task `lint:ruff` or `lint:ruff-fix` from the Command Palette.
+
+## Git hook
+
+To run lint automatically before each commit, install the versioned hook script:
+
+```bash
+chmod +x scripts/install-pre-commit-hook.sh scripts/pre-commit
+./scripts/install-pre-commit-hook.sh
+```
+
+After that, every `git commit` from this repo will run the same Docker-based lint check and block the commit if lint fails.

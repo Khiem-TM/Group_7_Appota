@@ -7,7 +7,11 @@ from app.models.participant import Participant
 from app.models.player import Player
 from app.models.standing import Standing
 from app.models.user import User
-from app.schemas.user import ChangePasswordRequest, PlayerCreateRequest, UpdateProfileRequest
+from app.schemas.user import (
+    ChangePasswordRequest,
+    PlayerCreateRequest,
+    UpdateProfileRequest,
+)
 
 
 async def get_user_by_id(db: AsyncSession, user_id: int) -> User:
