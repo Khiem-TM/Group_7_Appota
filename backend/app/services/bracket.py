@@ -314,4 +314,28 @@ async def propagate_match_result(
         if loser_participant:
             loser_participant.eliminated = True
 
+        # Advance winner to next round match
+        next_round = match.round + 1
+        # Winners from match_number 0&1 feed into next match_number 0,
+        # from 2&3 into 1, etc.
+        next_match_number = match.match_number // 2
+        next_match_result = await db.execute(
+            select(Match).where(
+                Match.tournament_id == tournament.id,
+                Match.round == next_round,
+                Match.match_number == next_match_number,
+                Match.bracket == match.bracket,
+            )
+        )
+        next_match = next_match_result.scalar_one_or_none()
+        if next_match:
+            # Even match_number fills player1 slot, odd fills player2 slot
+            if match.match_number % 2 == 0:
+                next_match.player1_id = match.winner_id
+            else:
+                next_match.player2_id = match.winner_id
+            # If both slots filled, mark as READY
+            if next_match.player1_id and next_match.player2_id:
+                next_match.status = "READY"
+
     await db.commit()

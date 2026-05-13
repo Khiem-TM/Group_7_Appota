@@ -3,6 +3,7 @@ from typing import List
 
 import redis.asyncio as aioredis
 from fastapi import APIRouter, Depends
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.redis import get_redis
@@ -21,12 +22,20 @@ router = APIRouter(prefix="/tournaments", tags=["announcements"])
 @router.get("/{tournament_id}/announcements", response_model=List[AnnouncementOut])
 async def get_announcements(tournament_id: int, db: AsyncSession = Depends(get_db)):
     anns = await list_announcements(db, tournament_id)
+
+    # Batch-fetch all authors in one query
+    author_ids = list({a.author_id for a in anns if a.author_id})
+    authors: dict[int, str] = {}
+    if author_ids:
+        rows = await db.execute(select(User.id, User.username).where(User.id.in_(author_ids)))
+        authors = {row.id: row.username for row in rows}
+
     result = []
     for a in anns:
         result.append(
             AnnouncementOut(
                 **{k: v for k, v in a.__dict__.items() if not k.startswith("_")},
-                author_username="",
+                author_username=authors.get(a.author_id, ""),
             )
         )
     return result

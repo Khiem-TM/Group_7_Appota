@@ -202,7 +202,7 @@ function ManageTournamentPage() {
     return <EmptyState title="Tournament not found" description="Try selecting another event." />;
   }
 
-  const scheduledMatches = matches.filter((m) => m.status === "SCHEDULED" || m.status === "ONGOING");
+  const scheduledMatches = matches.filter((m) => m.status === "READY");
 
   return (
     <>
@@ -283,8 +283,8 @@ function ManageTournamentPage() {
                   if (!roundMap.has(r)) roundMap.set(r, []);
                   roundMap.get(r).push({
                     id: m.id,
-                    teamA: m.player1_id ? `P#${m.player1_id}` : "TBD",
-                    teamB: m.player2_id ? `P#${m.player2_id}` : "TBD",
+                    teamA: m.player1_name ?? (m.player1_id ? `P#${m.player1_id}` : "TBD"),
+                    teamB: m.player2_name ?? (m.player2_id ? `P#${m.player2_id}` : "TBD"),
                     scoreA: m.score_player1 ?? 0,
                     scoreB: m.score_player2 ?? 0,
                     status: m.status === "COMPLETED" || m.status === "VERIFIED" ? "finished" : "upcoming"
@@ -312,7 +312,7 @@ function ManageTournamentPage() {
                     Round {m.round} · Match #{m.match_number}
                   </p>
                   <p className="mt-1 text-white">
-                    Player #{m.player1_id || "TBD"} vs Player #{m.player2_id || "TBD"}
+                    {m.player1_name ?? (m.player1_id ? `Player #${m.player1_id}` : "TBD")} vs {m.player2_name ?? (m.player2_id ? `Player #${m.player2_id}` : "TBD")}
                   </p>
                   <button
                     type="button"

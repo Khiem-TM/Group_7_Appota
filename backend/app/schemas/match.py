@@ -19,6 +19,8 @@ class MatchOut(BaseModel):
     status: str
     next_match_id: Optional[int]
     loser_next_match_id: Optional[int]
+    player1_name: Optional[str] = None
+    player2_name: Optional[str] = None
     created_at: datetime
 
     model_config = {"from_attributes": True}

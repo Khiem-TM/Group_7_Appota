@@ -115,6 +115,11 @@ export async function getTournamentStandings(id) {
   return data;
 }
 
+export async function getTournamentParticipants(id) {
+  const { data } = await client.get(`/tournaments/${id}/participants`);
+  return data;
+}
+
 export function matchesToBracketRounds(matches) {
   if (!matches || matches.length === 0) return [];
 
@@ -142,8 +147,8 @@ export function matchesToBracketRounds(matches) {
         .sort((a, b) => (a.match_number ?? 0) - (b.match_number ?? 0))
         .map((m) => ({
           id: m.id,
-          teamA: m.player1_id ? `Player #${m.player1_id}` : "TBD",
-          teamB: m.player2_id ? `Player #${m.player2_id}` : "TBD",
+          teamA: m.player1_name ?? (m.player1_id ? `Player #${m.player1_id}` : "TBD"),
+          teamB: m.player2_name ?? (m.player2_id ? `Player #${m.player2_id}` : "TBD"),
           scoreA: m.score_player1 ?? 0,
           scoreB: m.score_player2 ?? 0,
           status: m.status === "COMPLETED" || m.status === "VERIFIED" ? "finished" : "upcoming"

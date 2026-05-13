@@ -2,7 +2,7 @@ import { ChevronLeft, Maximize2, Share2, Swords, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { listAnnouncements } from "../api/announcements";
-import { getTournament, getTournamentMatches, getTournamentStandings, matchesToBracketRounds, toDisplayFormat } from "../api/tournaments";
+import { getTournament, getTournamentMatches, getTournamentParticipants, getTournamentStandings, matchesToBracketRounds, toDisplayFormat } from "../api/tournaments";
 import BracketView from "../components/tournaments/BracketView";
 
 const tabs = [
@@ -39,6 +39,7 @@ function TournamentDetailPage() {
   const [matches, setMatches] = useState([]);
   const [standings, setStandings] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
+  const [participants, setParticipants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -81,6 +82,11 @@ function TournamentDetailPage() {
     listAnnouncements(id).then(setAnnouncements).catch(() => {});
   }, [id, activeTab]);
 
+  useEffect(() => {
+    if (!id || activeTab !== "participants") return;
+    getTournamentParticipants(id).then(setParticipants).catch(() => {});
+  }, [id, activeTab]);
+
   // WebSocket for real-time updates
   useEffect(() => {
     if (!id) return;
@@ -95,7 +101,7 @@ function TournamentDetailPage() {
     ws.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data);
-        if (msg.type === "MATCH_UPDATE") {
+        if (msg.type === "MATCH_COMPLETED" || msg.type === "MATCH_UPDATE") {
           getTournamentMatches(id).then(setMatches).catch(() => {});
         } else if (msg.type === "STANDINGS_UPDATE") {
           getTournamentStandings(id).then(setStandings).catch(() => {});
@@ -305,13 +311,45 @@ function TournamentDetailPage() {
                   </div>
                 )}
               </>
-            ) : (
-              <div className="rounded-2xl border border-outline-variant bg-surface-container-low/85 p-8">
-                <p className="text-on-surface">
-                  Use the Manage page to add participants and generate the bracket.
-                </p>
-              </div>
-            )}
+            ) : activeTab === "participants" ? (
+              <>
+                <h2 className="font-display text-3xl font-bold italic tracking-tight text-white">Participants</h2>
+                {participants.length === 0 ? (
+                  <div className="rounded-2xl border border-outline-variant bg-surface-container-low/85 p-8">
+                    <p className="text-on-surface">No participants yet.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto rounded-2xl border border-outline-variant">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-outline-variant bg-surface-container-highest text-on-surface-variant">
+                          <th className="px-4 py-3 text-left">Seed</th>
+                          <th className="px-4 py-3 text-left">Player</th>
+                          <th className="px-4 py-3 text-left">Status</th>
+                          <th className="px-4 py-3 text-left">Placement</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {participants.map((p) => (
+                          <tr key={p.id} className="border-b border-outline-variant/40 bg-surface-container-low/70">
+                            <td className="px-4 py-3 text-on-surface-variant">{p.seed ?? "—"}</td>
+                            <td className="px-4 py-3 font-medium text-white">{p.player_name || `Player #${p.player_id}`}</td>
+                            <td className="px-4 py-3">
+                              {p.eliminated
+                                ? <span className="text-red-400">Eliminated</span>
+                                : <span className="text-emerald-400">Active</span>}
+                            </td>
+                            <td className="px-4 py-3 text-on-surface-variant">
+                              {p.placement ? `#${p.placement}` : "—"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
+            ) : null}
           </div>
         </section>
       </div>

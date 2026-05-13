@@ -1,5 +1,5 @@
 import { Bell, CircleUserRound, LogOut, Search } from "lucide-react";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import MobileNav from "./MobileNav";
 import Sidebar from "./Sidebar";
@@ -7,7 +7,19 @@ import Sidebar from "./Sidebar";
 function DashboardLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, loading, logout } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-surface text-on-surface-variant">
+        Loading…
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
   const basePath = location.pathname.startsWith("/app") ? "/app" : "";
   const hideSidebar = location.pathname.startsWith(`${basePath}/tournaments/`);
 

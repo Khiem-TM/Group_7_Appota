@@ -2,10 +2,13 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.dependencies import get_current_user, require_host
+from app.models.participant import Participant
+from app.models.player import Player
 from app.models.user import User
 from app.schemas.common import MessageResponse
 from app.schemas.match import MatchOut
@@ -132,6 +135,41 @@ async def generate_bracket(
     return [MatchOut(**{k: v for k, v in m.__dict__.items() if not k.startswith("_")}) for m in matches]
 
 
+class ParticipantDetailOut(BaseModel):
+    id: int
+    tournament_id: int
+    player_id: Optional[int] = None
+    player_name: Optional[str] = None
+    seed: Optional[int] = None
+    eliminated: bool = False
+    placement: Optional[int] = None
+
+    model_config = {"from_attributes": True}
+
+
+@router.get("/{tournament_id}/participants", response_model=List[ParticipantDetailOut])
+async def list_participants(tournament_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(Participant, Player.display_name)
+        .outerjoin(Player, Participant.player_id == Player.id)
+        .where(Participant.tournament_id == tournament_id)
+        .order_by(Participant.seed.nullslast(), Participant.id)
+    )
+    rows = result.all()
+    return [
+        ParticipantDetailOut(
+            id=p.id,
+            tournament_id=p.tournament_id,
+            player_id=p.player_id,
+            player_name=display_name,
+            seed=p.seed,
+            eliminated=p.eliminated,
+            placement=p.placement,
+        )
+        for p, display_name in rows
+    ]
+
+
 @router.post("/{tournament_id}/participants", response_model=ParticipantOut)
 async def add_participant(
     tournament_id: int,
@@ -181,4 +219,27 @@ async def leave(
 @router.get("/{tournament_id}/matches", response_model=List[MatchOut])
 async def get_matches(tournament_id: int, db: AsyncSession = Depends(get_db)):
     matches = await match_service.list_tournament_matches(db, tournament_id)
-    return [MatchOut(**{k: v for k, v in m.__dict__.items() if not k.startswith("_")}) for m in matches]
+
+    # Batch-fetch player names for all participant IDs in one query
+    participant_ids = {
+        pid
+        for m in matches
+        for pid in (m.player1_id, m.player2_id)
+        if pid is not None
+    }
+    name_map: dict[int, str] = {}
+    if participant_ids:
+        rows = await db.execute(
+            select(Participant.id, Player.display_name)
+            .join(Player, Participant.player_id == Player.id)
+            .where(Participant.id.in_(participant_ids))
+        )
+        name_map = {row.id: row.display_name for row in rows}
+
+    result = []
+    for m in matches:
+        data = {k: v for k, v in m.__dict__.items() if not k.startswith("_")}
+        data["player1_name"] = name_map.get(m.player1_id) if m.player1_id else None
+        data["player2_name"] = name_map.get(m.player2_id) if m.player2_id else None
+        result.append(MatchOut(**data))
+    return result
