@@ -109,9 +109,12 @@ async def update_status(
     if t.host_id != host_id:
         raise Forbidden("Only host can change tournament status")
 
+    if new_status == "ONGOING" and not t.bracket_generated:
+        raise BadRequest("Generate bracket before starting tournament")
+
     transitions = {
-        "DRAFT": ["REGISTRATION_OPEN"],
-        "REGISTRATION_OPEN": ["SEEDING", "DRAFT"],
+        "DRAFT": ["REGISTRATION_OPEN", "ONGOING"],
+        "REGISTRATION_OPEN": ["SEEDING", "ONGOING", "DRAFT"],
         "SEEDING": ["ONGOING"],
         "ONGOING": ["FINISHED"],
         "FINISHED": ["ARCHIVED"],

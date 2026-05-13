@@ -12,6 +12,8 @@ services:
       REFRESH_TOKEN_EXPIRE_DAYS: "7"
       CORS_ORIGINS: '["http://localhost:3000","http://localhost:5173"]'
     depends_on:
+      migrate:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
@@ -31,6 +33,8 @@ services:
       ACCESS_TOKEN_EXPIRE_MINUTES: "15"
       REFRESH_TOKEN_EXPIRE_DAYS: "7"
     depends_on:
+      migrate:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
@@ -51,6 +55,20 @@ services:
       - .:/app
     command: sh -lc 'cd /app && ruff check . --fix --config pyproject.toml'
 
+  migrate:
+    image: postgres:16-alpine
+    environment:
+      PGPASSWORD: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./repair_schema_refactor.sql:/migrations/repair_schema_refactor.sql
+    command: >
+      psql -h postgres -U postgres -d tournament_db
+      -f /migrations/repair_schema_refactor.sql
+    restart: "no"
+
   postgres:
     image: postgres:16-alpine
     environment:
@@ -61,6 +79,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/01-init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
