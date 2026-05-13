@@ -1,0 +1,47 @@
+from pydantic import BaseModel
+from typing import Optional
+from datetime import datetime
+
+
+class TournamentCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    # SINGLE_ELIMINATION, DOUBLE_ELIMINATION, ROUND_ROBIN, SWISS
+    format: str
+    visibility: str = "PUBLIC"
+    max_players: int = 16
+    game: Optional[str] = None
+    prize_pool: Optional[str] = None
+    rules: Optional[str] = None
+    start_date: Optional[str] = None
+
+
+class TournamentUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    visibility: Optional[str] = None
+    max_players: Optional[int] = None
+    game: Optional[str] = None
+    prize_pool: Optional[str] = None
+    rules: Optional[str] = None
+    start_date: Optional[str] = None
+
+
+class TournamentOut(BaseModel):
+    id: int
+    host_id: int
+    name: str
+    slug: Optional[str]
+    description: Optional[str]
+    status: str
+    format: str
+    visibility: str
+    max_players: int
+    game: Optional[str]
+    prize_pool: Optional[str]
+    start_date: Optional[str]
+    bracket_generated: bool
+    created_at: datetime
+    participant_count: int = 0
+
+    model_config = {"from_attributes": True}
