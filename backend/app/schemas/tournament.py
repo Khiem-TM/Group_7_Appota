@@ -46,3 +46,20 @@ class TournamentOut(BaseModel):
     participant_count: int = 0
 
     model_config = {"from_attributes": True}
+
+
+class TournamentJoinByPlayer(BaseModel):
+    player_id: int
+
+
+class ParticipantOut(BaseModel):
+    id: int
+    tournament_id: int
+    user_id: int
+    player_id: Optional[int] = None
+    seed: Optional[int] = None
+    eliminated: bool = False
+    placement: Optional[int] = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}

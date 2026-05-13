@@ -6,4 +6,4 @@ from app.models.standing import Standing
 from app.models.tournament import Tournament
 from app.models.user import User
 
-__all__ = ["User", "Player", "Tournament", "Participant", "Match", "Standing", "Announcement"]
+__all__ = ["User", "Tournament", "Participant", "Player", "Match", "Standing", "Announcement"]

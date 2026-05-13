@@ -10,6 +10,7 @@ from app.core.security import (
     hash_password,
     verify_password,
 )
+from app.models.player import Player
 from app.models.user import User
 from app.schemas.auth import LoginRequest, RegisterRequest
 
@@ -32,6 +33,15 @@ async def register(db: AsyncSession, redis: aioredis.Redis, data: RegisterReques
     db.add(user)
     await db.commit()
     await db.refresh(user)
+
+    player = Player(
+        display_name=user.username,
+        avatar_url=user.avatar_url,
+        created_by=user.id,
+    )
+    db.add(player)
+    await db.commit()
+    await db.refresh(player)
 
     access_token = create_access_token(user.id, user.role)
     refresh_token = create_refresh_token(user.id)

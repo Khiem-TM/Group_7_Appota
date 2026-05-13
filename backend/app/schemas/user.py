@@ -32,3 +32,18 @@ class UpdateProfileRequest(BaseModel):
 class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str
+
+
+class PlayerCreateRequest(BaseModel):
+    display_name: str
+    avatar_url: Optional[str] = None
+
+
+class PlayerOut(BaseModel):
+    id: int
+    display_name: str
+    avatar_url: Optional[str]
+    created_by: Optional[int]
+    created_at: datetime
+
+    model_config = {"from_attributes": True}

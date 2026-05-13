@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 
 from app.core.exceptions import BadRequest, Conflict, Forbidden, NotFound
 from app.models.participant import Participant
+from app.models.player import Player
 from app.models.standing import Standing
 from app.models.tournament import Tournament
 from app.models.user import User
@@ -167,6 +168,54 @@ async def join_tournament(db: AsyncSession, tournament_id: int, user: User) -> P
     participant = Participant(tournament_id=tournament_id, player_id=player.id)
     db.add(participant)
     await db.flush()  # get participant.id
+
+    standing = Standing(
+        tournament_id=tournament_id,
+        participant_id=participant.id,
+    )
+    db.add(standing)
+
+    await db.commit()
+    await db.refresh(participant)
+    return participant
+
+
+async def join_tournament_by_player(
+    db: AsyncSession, tournament_id: int, user: User, player_id: int
+) -> Participant:
+    t = await get_tournament(db, tournament_id)
+    if t.status != "REGISTRATION_OPEN":
+        raise BadRequest("Tournament is not open for registration")
+
+    player_result = await db.execute(select(Player).where(Player.id == player_id))
+    player = player_result.scalar_one_or_none()
+    if not player:
+        raise NotFound("Player not found")
+
+    if player.created_by != user.id:
+        raise Forbidden("You can only join with your own player profile")
+
+    existing = await db.execute(
+        select(Participant).where(
+            Participant.tournament_id == tournament_id,
+            Participant.player_id == player_id,
+        )
+    )
+    if existing.scalar_one_or_none():
+        raise Conflict("Already joined this tournament")
+
+    count_result = await db.execute(
+        select(func.count()).select_from(Participant).where(
+            Participant.tournament_id == tournament_id
+        )
+    )
+    count = count_result.scalar() or 0
+    if count >= t.max_players:
+        raise BadRequest("Tournament is full")
+
+    participant = Participant(tournament_id=tournament_id, user_id=user.id, player_id=player_id)
+    db.add(participant)
+    await db.flush()
 
     standing = Standing(
         tournament_id=tournament_id,
