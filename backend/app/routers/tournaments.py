@@ -132,6 +132,19 @@ async def generate_bracket(
     return [MatchOut(**{k: v for k, v in m.__dict__.items() if not k.startswith("_")}) for m in matches]
 
 
+@router.post("/{tournament_id}/participants", response_model=ParticipantOut)
+async def add_participant(
+    tournament_id: int,
+    data: AddParticipantRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_host),
+):
+    participant = await tournament_service.add_participant(
+        db, tournament_id, current_user.id, data.player_name
+    )
+    return ParticipantOut.model_validate(participant)
+
+
 @router.post("/{tournament_id}/join", response_model=MessageResponse)
 async def join(
     tournament_id: int,

@@ -7,8 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.redis import get_redis
 from app.database import get_db
-from app.models.user import User
 from app.models.player import Player
+from app.models.user import User
 from app.schemas.standing import StandingOut
 from app.services import standing as standing_service
 

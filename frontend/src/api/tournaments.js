@@ -88,6 +88,13 @@ export async function generateBracket(id) {
   return data;
 }
 
+export async function addParticipant(id, playerName) {
+  const { data } = await client.post(`/tournaments/${id}/participants`, {
+    player_name: playerName
+  });
+  return data;
+}
+
 export async function joinTournament(id) {
   const { data } = await client.post(`/tournaments/${id}/join`);
   return data;

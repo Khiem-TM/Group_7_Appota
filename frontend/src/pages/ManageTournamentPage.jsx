@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import { createAnnouncement, listAnnouncements } from "../api/announcements";
 import { reportMatch } from "../api/matches";
 import {
+  addParticipant,
   generateBracket,
   getTournament,
   getTournamentMatches,
@@ -97,6 +98,8 @@ function ManageTournamentPage() {
   const [annTitle, setAnnTitle] = useState("");
   const [annContent, setAnnContent] = useState("");
   const [annLoading, setAnnLoading] = useState(false);
+  const [participantName, setParticipantName] = useState("");
+  const [participantLoading, setParticipantLoading] = useState(false);
 
   async function reload() {
     try {
@@ -170,6 +173,23 @@ function ManageTournamentPage() {
     }
   };
 
+  const handleAddParticipant = async (e) => {
+    e.preventDefault();
+    const trimmedName = participantName.trim();
+    if (!trimmedName) return;
+    setActionError("");
+    setParticipantLoading(true);
+    try {
+      await addParticipant(id, trimmedName);
+      setParticipantName("");
+      await reload();
+    } catch (err) {
+      setActionError(err.response?.data?.detail || "Failed to add participant.");
+    } finally {
+      setParticipantLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-[200px] items-center justify-center text-on-surface-variant">
@@ -229,6 +249,28 @@ function ManageTournamentPage() {
             </button>
           ) : null}
         </section>
+
+        {["DRAFT", "REGISTRATION_OPEN", "SEEDING"].includes(tournament.status) ? (
+          <section className="rounded-xl border border-outline-variant bg-surface-container-low p-5">
+            <h3 className="font-display text-xl text-white">Add Participant</h3>
+            <form onSubmit={handleAddParticipant} className="mt-4 flex flex-col gap-3 sm:flex-row">
+              <input
+                type="text"
+                value={participantName}
+                onChange={(e) => setParticipantName(e.target.value)}
+                placeholder="Participant name"
+                className="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-sm text-white outline-none focus:border-primary-container"
+              />
+              <button
+                type="submit"
+                disabled={participantLoading || !participantName.trim()}
+                className="rounded-xl bg-primary-container px-4 py-2.5 text-sm font-semibold text-on-primary hover:bg-primary disabled:opacity-60"
+              >
+                {participantLoading ? "Adding..." : "Add"}
+              </button>
+            </form>
+          </section>
+        ) : null}
 
         {matches.length > 0 ? (
           <div className="space-y-3">
