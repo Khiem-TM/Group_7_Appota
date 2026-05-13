@@ -29,6 +29,7 @@ function App() {
         <Route path="tournaments/new" element={<CreateTournamentPage />} />
         <Route path="tournaments/create" element={<Navigate to="/app/tournaments/new" replace />} />
         <Route path="tournaments/:id" element={<TournamentDetailPage />} />
+        <Route path="tournaments/:id/:tab" element={<TournamentDetailPage />} />
         <Route path="tournaments/:id/manage" element={<ManageTournamentPage />} />
         <Route path="profile" element={<ProfilePage />} />
       </Route>
