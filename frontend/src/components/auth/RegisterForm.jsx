@@ -1,4 +1,4 @@
-import { UserPlus } from "lucide-react";
+import { UserPlus, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
@@ -7,14 +7,16 @@ function RegisterForm() {
   const navigate = useNavigate();
   const { register } = useAuth();
   const [form, setForm] = useState({
-    username: "",
     email: "",
     password: "",
     confirmPassword: "",
+    username: "",
     acceptedTerms: false
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -50,18 +52,6 @@ function RegisterForm() {
       ) : null}
 
       <div>
-        <label className="text-xs uppercase tracking-[0.14em] text-on-surface-variant">Username</label>
-        <input
-          type="text"
-          required
-          value={form.username}
-          onChange={(event) => setForm({ ...form, username: event.target.value })}
-          placeholder="arena_manager"
-          className="mt-2 w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-base text-white outline-none placeholder:text-on-surface-variant/80 focus:border-primary-container"
-        />
-      </div>
-
-      <div>
         <label className="text-xs uppercase tracking-[0.14em] text-on-surface-variant">Email</label>
         <input
           type="email"
@@ -76,26 +66,61 @@ function RegisterForm() {
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label className="text-xs uppercase tracking-[0.14em] text-on-surface-variant">Password</label>
-          <input
-            type="password"
-            required
-            value={form.password}
-            onChange={(event) => setForm({ ...form, password: event.target.value })}
-            placeholder="Create password"
-            className="mt-2 w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-base text-white outline-none placeholder:text-on-surface-variant/80 focus:border-primary-container"
-          />
+          <div className="relative mt-2">
+            <input
+              type={showPassword ? "text" : "password"}
+              required
+              value={form.password}
+              onChange={(event) => setForm({ ...form, password: event.target.value })}
+              placeholder="Create password"
+              className="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 pr-10 text-base text-white outline-none placeholder:text-on-surface-variant/80 focus:border-primary-container"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((s) => !s)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
         </div>
         <div>
           <label className="text-xs uppercase tracking-[0.14em] text-on-surface-variant">Confirm password</label>
-          <input
-            type="password"
-            required
-            value={form.confirmPassword}
-            onChange={(event) => setForm({ ...form, confirmPassword: event.target.value })}
-            placeholder="Re-enter password"
-            className="mt-2 w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-base text-white outline-none placeholder:text-on-surface-variant/80 focus:border-primary-container"
-          />
+          <div className="relative mt-2">
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              required
+              value={form.confirmPassword}
+              onChange={(event) => setForm({ ...form, confirmPassword: event.target.value })}
+              placeholder="Re-enter password"
+              className="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 pr-10 text-base text-white outline-none placeholder:text-on-surface-variant/80 focus:border-primary-container"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword((s) => !s)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant"
+              aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+            >
+              {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
         </div>
+      </div>
+
+      <div>
+        <label className="text-xs uppercase tracking-[0.14em] text-on-surface-variant">Username</label>
+        <input
+          type="text"
+          required
+          value={form.username}
+          onChange={(event) => setForm({ ...form, username: event.target.value })}
+          placeholder="arena_manager"
+          className="mt-2 w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-base text-white outline-none placeholder:text-on-surface-variant/80 focus:border-primary-container"
+        />
+        <p className="mt-1.5 text-xs text-on-surface-variant/70">
+          * Username is for display purposes only. Your email will be required to log in.
+        </p>
       </div>
 
       <label className="flex items-center gap-2 pt-1 text-sm text-on-surface-variant">
