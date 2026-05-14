@@ -69,8 +69,7 @@ Public profile hiển thị avatar/cover, thống kê giải đấu, số trận
 │   │   ├── services/
 │   │   └── main.py
 │   ├── docker-compose.yml
-│   ├── init-db.sql
-│   ├── repair_schema_refactor.sql
+│   ├── schema.sql
 │   └── requirements.txt
 ├── frontend/
 │   ├── src/
@@ -214,4 +213,4 @@ npm run build
 
 ## Ghi Chú Migration
 
-`backend/docker-compose.yml` có service `migrate`, tự chạy các file SQL idempotent khi `docker compose up`. Nhờ vậy dev khác chỉ cần pull code và chạy Docker Compose để cập nhật schema/database seed.
+`backend/docker-compose.yml` có service `migrate`, tự chạy một file SQL chính là `backend/schema.sql` khi `docker compose up`. File này idempotent, vừa tạo schema cho database mới vừa cập nhật các cột/bảng/index/seed data cần thiết cho database local đã tồn tại.

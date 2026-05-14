@@ -63,11 +63,9 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./repair_schema_refactor.sql:/migrations/repair_schema_refactor.sql
-      - ./migrate_new_features.sql:/migrations/migrate_new_features.sql
+      - ./schema.sql:/migrations/schema.sql
     command: >
-      sh -c "psql -h postgres -U postgres -d tournament_db -f /migrations/repair_schema_refactor.sql
-      && psql -h postgres -U postgres -d tournament_db -f /migrations/migrate_new_features.sql"
+      sh -c "psql -h postgres -U postgres -d tournament_db -f /migrations/schema.sql"
     restart: "no"
 
   postgres:
@@ -80,7 +78,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init-db.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
