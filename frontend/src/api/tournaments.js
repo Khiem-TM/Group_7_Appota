@@ -120,7 +120,26 @@ export async function getTournamentParticipants(id) {
   return data;
 }
 
-export function matchesToBracketRounds(matches) {
+function toBracketCardMatch(m) {
+  return {
+    id: m.id,
+    teamA: m.player1_name ?? (m.player1_id ? `Player #${m.player1_id}` : "TBD"),
+    teamB: m.player2_name ?? (m.player2_id ? `Player #${m.player2_id}` : "TBD"),
+    scoreA: m.score_player1 ?? 0,
+    scoreB: m.score_player2 ?? 0,
+    status: m.status === "COMPLETED" || m.status === "VERIFIED" ? "finished" : "upcoming"
+  };
+}
+
+function defaultRoundTitle(roundNum, idx, totalRounds) {
+  const remaining = totalRounds - idx;
+  if (remaining === 1) return "Final";
+  if (remaining === 2) return "Semifinals";
+  if (remaining === 3) return "Quarterfinals";
+  return `Round ${roundNum}`;
+}
+
+function groupMatchesToRounds(matches, titleBuilder = defaultRoundTitle) {
   if (!matches || matches.length === 0) return [];
 
   const roundMap = new Map();
@@ -133,26 +152,59 @@ export function matchesToBracketRounds(matches) {
   const sortedRounds = [...roundMap.entries()].sort(([a], [b]) => a - b);
   const totalRounds = sortedRounds.length;
 
-  return sortedRounds.map(([roundNum, roundMatches], idx) => {
-    const remaining = totalRounds - idx;
-    let name;
-    if (remaining === 1) name = "Final";
-    else if (remaining === 2) name = "Semifinals";
-    else if (remaining === 3) name = "Quarterfinals";
-    else name = `Round ${roundNum}`;
+  return sortedRounds.map(([roundNum, roundMatches], idx) => ({
+    name: titleBuilder(roundNum, idx, totalRounds),
+    matches: roundMatches
+      .sort((a, b) => (a.match_number ?? 0) - (b.match_number ?? 0))
+      .map(toBracketCardMatch)
+  }));
+}
 
-    return {
-      name,
-      matches: roundMatches
-        .sort((a, b) => (a.match_number ?? 0) - (b.match_number ?? 0))
-        .map((m) => ({
-          id: m.id,
-          teamA: m.player1_name ?? (m.player1_id ? `Player #${m.player1_id}` : "TBD"),
-          teamB: m.player2_name ?? (m.player2_id ? `Player #${m.player2_id}` : "TBD"),
-          scoreA: m.score_player1 ?? 0,
-          scoreB: m.score_player2 ?? 0,
-          status: m.status === "COMPLETED" || m.status === "VERIFIED" ? "finished" : "upcoming"
-        }))
-    };
-  });
+export function matchesToBracketRounds(matches) {
+  return groupMatchesToRounds(matches);
+}
+
+export function matchesToBracketViews(matches, tournamentFormat) {
+  if (!matches || matches.length === 0) return [];
+
+  if (tournamentFormat !== "DOUBLE_ELIMINATION") {
+    return [{ key: "main", title: "Bracket", rounds: groupMatchesToRounds(matches) }];
+  }
+
+  const winnerMatches = matches.filter((m) => m.bracket_type === "WINNER");
+  const loserMatches = matches.filter((m) => m.bracket_type === "LOSER");
+  const grandFinalMatches = matches.filter(
+    (m) => m.bracket_type === "GRAND_FINAL" || m.bracket_type === "GRAND_FINAL_RESET"
+  );
+
+  const views = [];
+  if (winnerMatches.length > 0) {
+    views.push({
+      key: "winner",
+      title: "Winner Bracket",
+      rounds: groupMatchesToRounds(winnerMatches)
+    });
+  }
+  if (loserMatches.length > 0) {
+    views.push({
+      key: "loser",
+      title: "Loser Bracket",
+      rounds: groupMatchesToRounds(
+        loserMatches,
+        (roundNum) => `Losers Round ${roundNum}`
+      )
+    });
+  }
+  if (grandFinalMatches.length > 0) {
+    views.push({
+      key: "grand_final",
+      title: "Grand Final",
+      rounds: groupMatchesToRounds(
+        grandFinalMatches,
+        (_roundNum, idx) => (idx === 0 ? "Final" : "If Necessary")
+      )
+    });
+  }
+
+  return views;
 }

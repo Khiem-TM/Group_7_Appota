@@ -2,7 +2,7 @@ import { ChevronLeft, Maximize2, Share2, Swords, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { listAnnouncements } from "../api/announcements";
-import { getTournament, getTournamentMatches, getTournamentParticipants, getTournamentStandings, matchesToBracketRounds, toDisplayFormat } from "../api/tournaments";
+import { getTournament, getTournamentMatches, getTournamentParticipants, getTournamentStandings, matchesToBracketViews, toDisplayFormat } from "../api/tournaments";
 import BracketView from "../components/tournaments/BracketView";
 
 const tabs = [
@@ -139,7 +139,10 @@ function TournamentDetailPage() {
     };
   }, [isBracketFullscreen]);
 
-  const rounds = useMemo(() => matchesToBracketRounds(matches), [matches]);
+  const bracketViews = useMemo(
+    () => matchesToBracketViews(matches, tournament?.format),
+    [matches, tournament?.format]
+  );
 
   if (loading) {
     return (
@@ -244,8 +247,17 @@ function TournamentDetailPage() {
                     </button>
                   </div>
                 </div>
-                {rounds.length > 0 ? (
-                  <BracketView rounds={rounds} />
+                {bracketViews.length > 0 ? (
+                  <div className="space-y-6">
+                    {bracketViews.map((view) => (
+                      <div key={view.key} className="space-y-3">
+                        {view.title !== "Bracket" ? (
+                          <h3 className="text-lg font-semibold text-white">{view.title}</h3>
+                        ) : null}
+                        <BracketView rounds={view.rounds} />
+                      </div>
+                    ))}
+                  </div>
                 ) : (
                   <div className="rounded-2xl border border-outline-variant bg-surface-container-low/85 p-8">
                     <p className="inline-flex items-center gap-2 text-base text-on-surface md:text-lg">
@@ -371,8 +383,17 @@ function TournamentDetailPage() {
               </button>
             </div>
             <div className="min-h-0 flex-1 overflow-auto bg-tournament-shell">
-              {rounds.length > 0 ? (
-                <BracketView rounds={rounds} fullscreen />
+              {bracketViews.length > 0 ? (
+                <div className="space-y-6 px-2 py-2 md:px-4 md:py-4">
+                  {bracketViews.map((view) => (
+                    <div key={view.key} className="space-y-3">
+                      {view.title !== "Bracket" ? (
+                        <h3 className="px-2 text-xl font-semibold text-white">{view.title}</h3>
+                      ) : null}
+                      <BracketView rounds={view.rounds} fullscreen />
+                    </div>
+                  ))}
+                </div>
               ) : (
                 <div className="mx-4 mt-6 rounded-2xl border border-outline-variant bg-surface-container-low/85 p-8 md:mx-6">
                   <p className="text-base text-on-surface md:text-lg">No bracket generated yet.</p>

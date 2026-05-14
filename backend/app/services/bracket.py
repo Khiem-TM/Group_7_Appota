@@ -50,6 +50,11 @@ async def generate_bracket(db: AsyncSession, tournament: Tournament) -> List[Mat
     for m in matches:
         await db.refresh(m)
 
+    # Propagate auto-completed BYE winners into subsequent matches.
+    for m in matches:
+        if m.status == "COMPLETED" and m.winner_id:
+            await propagate_match_result(db, m, tournament)
+
     return matches
 
 
@@ -164,9 +169,10 @@ def _generate_double_elimination(
             all_matches.append(m)
         prev_winner = cur_round
 
-    # Loser bracket rounds
-    for r in range(1, total_rounds * 2):
-        lr_count = max(1, size // (2 ** (r // 2 + 1)))
+    # Loser bracket rounds: 2 * (winner_rounds - 1)
+    total_loser_rounds = max(0, 2 * (total_rounds - 1))
+    for r in range(1, total_loser_rounds + 1):
+        lr_count = max(1, size // (2 ** (((r + 1) // 2) + 1)))
         for i in range(lr_count):
             m = Match(
                 tournament_id=tournament_id,
@@ -177,15 +183,23 @@ def _generate_double_elimination(
             )
             all_matches.append(m)
 
-    # Grand Final
+    # Grand Final + optional reset (if LB champion wins first final)
     gf = Match(
         tournament_id=tournament_id,
-        round=total_rounds * 2 + 1,
+        round=1,
         match_number=0,
         bracket_type="GRAND_FINAL",
         status="PENDING",
     )
     all_matches.append(gf)
+    gf_reset = Match(
+        tournament_id=tournament_id,
+        round=2,
+        match_number=0,
+        bracket_type="GRAND_FINAL_RESET",
+        status="PENDING",
+    )
+    all_matches.append(gf_reset)
 
     return all_matches
 
@@ -303,39 +317,140 @@ async def generate_swiss_next_round(
 async def propagate_match_result(
     db: AsyncSession, match: Match, tournament: Tournament
 ):
-    if not match.winner_id or not match.loser_id:
+    if not match.winner_id:
         return
 
-    if tournament.format in ("SINGLE_ELIMINATION", "DOUBLE_ELIMINATION"):
+    async def find_match(bracket_type: str, round_num: int, match_num: int):
+        result = await db.execute(
+            select(Match).where(
+                Match.tournament_id == tournament.id,
+                Match.bracket == bracket_type,
+                Match.round == round_num,
+                Match.match_number == match_num,
+            )
+        )
+        return result.scalar_one_or_none()
+
+    def assign_player(target: Match, participant_id: int, prefer_slot: int) -> None:
+        if not target or not participant_id:
+            return
+        if prefer_slot == 1:
+            if target.player1_id is None:
+                target.player1_id = participant_id
+            elif target.player2_id is None and target.player1_id != participant_id:
+                target.player2_id = participant_id
+        else:
+            if target.player2_id is None:
+                target.player2_id = participant_id
+            elif target.player1_id is None and target.player2_id != participant_id:
+                target.player1_id = participant_id
+
+        if target.player1_id and target.player2_id and target.status not in ("COMPLETED", "VERIFIED"):
+            target.status = "READY"
+
+    async def mark_eliminated(participant_id: int | None) -> None:
+        if not participant_id:
+            return
         loser_result = await db.execute(
-            select(Participant).where(Participant.id == match.loser_id)
+            select(Participant).where(Participant.id == participant_id)
         )
         loser_participant = loser_result.scalar_one_or_none()
         if loser_participant:
             loser_participant.eliminated = True
 
-        # Advance winner to next round match
+    if tournament.format == "SINGLE_ELIMINATION":
+        await mark_eliminated(match.loser_id)
+
         next_round = match.round + 1
-        # Winners from match_number 0&1 feed into next match_number 0,
-        # from 2&3 into 1, etc.
         next_match_number = match.match_number // 2
-        next_match_result = await db.execute(
-            select(Match).where(
-                Match.tournament_id == tournament.id,
-                Match.round == next_round,
-                Match.match_number == next_match_number,
-                Match.bracket == match.bracket,
-            )
-        )
-        next_match = next_match_result.scalar_one_or_none()
+        next_match = await find_match(match.bracket, next_round, next_match_number)
         if next_match:
-            # Even match_number fills player1 slot, odd fills player2 slot
-            if match.match_number % 2 == 0:
-                next_match.player1_id = match.winner_id
+            assign_player(next_match, match.winner_id, 1 if match.match_number % 2 == 0 else 2)
+
+        await db.commit()
+        return
+
+    if tournament.format == "DOUBLE_ELIMINATION":
+        # Winner bracket progression
+        if match.bracket == "WINNER":
+            winner_round_result = await db.execute(
+                select(Match.round)
+                .where(
+                    Match.tournament_id == tournament.id,
+                    Match.bracket == "WINNER",
+                )
+                .order_by(Match.round.desc())
+                .limit(1)
+            )
+            winner_final_round = winner_round_result.scalar_one_or_none() or match.round
+
+            if match.round < winner_final_round:
+                next_match = await find_match("WINNER", match.round + 1, match.match_number // 2)
+                if next_match:
+                    assign_player(next_match, match.winner_id, 1 if match.match_number % 2 == 0 else 2)
             else:
-                next_match.player2_id = match.winner_id
-            # If both slots filled, mark as READY
-            if next_match.player1_id and next_match.player2_id:
-                next_match.status = "READY"
+                grand_final = await find_match("GRAND_FINAL", 1, 0)
+                if grand_final:
+                    assign_player(grand_final, match.winner_id, 1)
+
+            if match.loser_id:
+                if match.round == 1:
+                    # First WB losses enter LB round 1 by adjacent pairing.
+                    lb_round = 1
+                    lb_match_number = match.match_number // 2
+                    lb_slot = 1 if match.match_number % 2 == 0 else 2
+                else:
+                    # WB round r losses enter LB round (2r-2), same match index.
+                    lb_round = 2 * (match.round - 1)
+                    lb_match_number = match.match_number
+                    lb_slot = 2
+                lb_match = await find_match("LOSER", lb_round, lb_match_number)
+                if lb_match:
+                    assign_player(lb_match, match.loser_id, lb_slot)
+
+        # Loser bracket progression
+        elif match.bracket == "LOSER":
+            await mark_eliminated(match.loser_id)
+
+            loser_final_round_result = await db.execute(
+                select(Match.round)
+                .where(
+                    Match.tournament_id == tournament.id,
+                    Match.bracket == "LOSER",
+                )
+                .order_by(Match.round.desc())
+                .limit(1)
+            )
+            loser_final_round = loser_final_round_result.scalar_one_or_none() or match.round
+
+            if match.round < loser_final_round:
+                if match.round % 2 == 1:
+                    # Odd LB round winner goes straight to same-index even LB round.
+                    next_match = await find_match("LOSER", match.round + 1, match.match_number)
+                    if next_match:
+                        assign_player(next_match, match.winner_id, 1)
+                else:
+                    # Even LB round winners pair into next odd LB round.
+                    next_match = await find_match("LOSER", match.round + 1, match.match_number // 2)
+                    if next_match:
+                        assign_player(next_match, match.winner_id, 1 if match.match_number % 2 == 0 else 2)
+            else:
+                grand_final = await find_match("GRAND_FINAL", 1, 0)
+                if grand_final:
+                    assign_player(grand_final, match.winner_id, 2)
+
+        # First grand final
+        elif match.bracket == "GRAND_FINAL":
+            # If LB champion wins GF1, create/reset the "if necessary" match.
+            if match.player2_id and match.winner_id == match.player2_id:
+                reset_match = await find_match("GRAND_FINAL_RESET", 2, 0)
+                if reset_match:
+                    assign_player(reset_match, match.player1_id, 1)
+                    assign_player(reset_match, match.player2_id, 2)
+            elif match.loser_id:
+                await mark_eliminated(match.loser_id)
+
+        elif match.bracket == "GRAND_FINAL_RESET":
+            await mark_eliminated(match.loser_id)
 
     await db.commit()

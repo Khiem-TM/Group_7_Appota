@@ -17,18 +17,24 @@ function TeamRow({ team, score }) {
   );
 }
 
-function MatchCard({ match, hasNextRound, hasPrevRound }) {
+function MatchCard({ match, hasNextRound, hasPrevRound, className = "", connectorSpan = 20 }) {
   const isFinished = match.status === "finished";
   const teamA = parseTeam(match.teamA);
   const teamB = parseTeam(match.teamB);
 
   return (
-    <article className="relative rounded-xl border border-outline-variant bg-surface-container-low/95 p-3">
+    <article className={`relative flex h-full flex-col rounded-xl border border-outline-variant bg-surface-container-low/95 p-3 ${className}`}>
       {hasPrevRound ? (
-        <span className="pointer-events-none absolute -left-5 top-1/2 hidden h-px w-5 -translate-y-1/2 bg-outline-variant/80 xl:block" />
+        <span
+          className="pointer-events-none absolute top-1/2 hidden h-px -translate-y-1/2 bg-outline-variant/80 xl:block"
+          style={{ left: `-${connectorSpan}px`, width: `${connectorSpan}px` }}
+        />
       ) : null}
       {hasNextRound ? (
-        <span className="pointer-events-none absolute -right-5 top-1/2 hidden h-px w-5 -translate-y-1/2 bg-outline-variant/80 xl:block" />
+        <span
+          className="pointer-events-none absolute top-1/2 hidden h-px -translate-y-1/2 bg-outline-variant/80 xl:block"
+          style={{ right: `-${connectorSpan}px`, width: `${connectorSpan}px` }}
+        />
       ) : null}
 
       <header className="mb-2 flex items-center justify-between">

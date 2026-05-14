@@ -1,19 +1,20 @@
 import MatchCard from "./MatchCard";
 
-const MATCH_HEIGHT = 86;
+const MATCH_HEIGHT = 126;
 const BASE_GAP = 16;
 
-function RoundColumn({ round, roundIndex, totalRounds, fullscreen = false }) {
+function RoundColumn({ round, roundIndex, totalRounds, fullscreen = false, connectorSpan = 20 }) {
   const hasNextRound = roundIndex < totalRounds - 1;
   const hasPrevRound = roundIndex > 0;
 
-  const matchHeight = fullscreen ? 94 : MATCH_HEIGHT;
+  const matchHeight = fullscreen ? 134 : MATCH_HEIGHT;
   const baseGap = fullscreen ? 22 : BASE_GAP;
-  const step = (matchHeight + baseGap) * Math.pow(2, roundIndex);
-  const firstOffset = roundIndex === 0 ? 0 : step / 2 - matchHeight / 2;
-  const betweenGap = step - matchHeight;
+  const rowPitch = matchHeight + baseGap;
+  const step = rowPitch * Math.pow(2, roundIndex);
+  const firstOffset = roundIndex === 0 ? 0 : (Math.pow(2, roundIndex) - 1) * (rowPitch / 2);
+  const matchTops = round.matches.map((_, index) => firstOffset + index * step);
   const trackHeight =
-    round.matches.length > 0 ? firstOffset * 2 + (round.matches.length - 1) * step + matchHeight : matchHeight;
+    matchTops.length > 0 ? matchTops[matchTops.length - 1] + matchHeight : matchHeight;
 
   const pairConnectors = hasNextRound
     ? Array.from({ length: Math.floor(round.matches.length / 2) }, (_, pairIndex) => {
@@ -36,18 +37,31 @@ function RoundColumn({ round, roundIndex, totalRounds, fullscreen = false }) {
         {round.matches.map((match, index) => (
           <div
             key={match.id}
-            className="relative"
-            style={{ marginTop: index === 0 ? `${firstOffset}px` : `${betweenGap}px` }}
+            className="absolute left-0 right-0"
+            style={{
+              top: `${matchTops[index]}px`,
+              height: `${matchHeight}px`
+            }}
           >
-            <MatchCard match={match} hasNextRound={hasNextRound} hasPrevRound={hasPrevRound} />
+            <MatchCard
+              match={match}
+              hasNextRound={hasNextRound}
+              hasPrevRound={hasPrevRound}
+              className="h-full"
+              connectorSpan={connectorSpan}
+            />
           </div>
         ))}
 
         {pairConnectors.map((connector) => (
           <span
             key={connector.id}
-            className="pointer-events-none absolute -right-5 hidden w-px bg-outline-variant/80 xl:block"
-            style={{ top: `${connector.top}px`, height: `${connector.height}px` }}
+            className="pointer-events-none absolute hidden w-px bg-outline-variant/80 xl:block"
+            style={{
+              top: `${connector.top}px`,
+              right: `-${connectorSpan}px`,
+              height: `${connector.height}px`
+            }}
           />
         ))}
       </div>

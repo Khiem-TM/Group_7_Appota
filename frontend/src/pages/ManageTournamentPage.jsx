@@ -1,6 +1,6 @@
-import { CheckCircle2, Send } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Send } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { createAnnouncement, listAnnouncements } from "../api/announcements";
 import { reportMatch } from "../api/matches";
 import {
@@ -9,6 +9,7 @@ import {
   getTournament,
   getTournamentMatches,
   getTournamentStandings,
+  matchesToBracketViews,
   publishTournament,
   startTournament,
   toDisplayFormat
@@ -118,6 +119,7 @@ function ReportMatchModal({ match, onClose, onReported }) {
 
 function ManageTournamentPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const [tournament, setTournament] = useState(null);
   const [matches, setMatches] = useState([]);
@@ -237,11 +239,27 @@ function ManageTournamentPage() {
   }
 
   const playableMatches = matches.filter((m) => m.player1_id && m.player2_id);
+  const bracketViews = matchesToBracketViews(matches, tournament.format);
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate(`/app/tournaments/${id}`);
+  };
 
   return (
     <>
       <div className="space-y-6">
         <div>
+          <button
+            type="button"
+            onClick={handleBack}
+            className="mb-3 inline-flex items-center gap-2 rounded-lg border border-outline-variant px-3 py-1.5 text-sm text-on-surface-variant hover:text-white"
+          >
+            <ArrowLeft size={15} />
+            Back
+          </button>
           <h2 className="page-title">Manage: {tournament.name}</h2>
           <p className="page-subtitle">
             {toDisplayFormat(tournament.format)} • Status: {tournament.status?.replace(/_/g, " ")}
@@ -311,30 +329,16 @@ function ManageTournamentPage() {
         {matches.length > 0 ? (
           <div className="space-y-3">
             <h3 className="font-display text-xl text-white">Bracket</h3>
-            <BracketView
-              rounds={(() => {
-                const roundMap = new Map();
-                for (const m of matches) {
-                  const r = m.round ?? 1;
-                  if (!roundMap.has(r)) roundMap.set(r, []);
-                  roundMap.get(r).push({
-                    id: m.id,
-                    teamA: m.player1_name ?? (m.player1_id ? `P#${m.player1_id}` : "TBD"),
-                    teamB: m.player2_name ?? (m.player2_id ? `P#${m.player2_id}` : "TBD"),
-                    scoreA: m.score_player1 ?? 0,
-                    scoreB: m.score_player2 ?? 0,
-                    status: m.status === "COMPLETED" || m.status === "VERIFIED" ? "finished" : "upcoming"
-                  });
-                }
-                const sorted = [...roundMap.entries()].sort(([a], [b]) => a - b);
-                const total = sorted.length;
-                return sorted.map(([roundNum, rMatches], idx) => {
-                  const rem = total - idx;
-                  const name = rem === 1 ? "Final" : rem === 2 ? "Semifinals" : rem === 3 ? "Quarterfinals" : `Round ${roundNum}`;
-                  return { name, matches: rMatches };
-                });
-              })()}
-            />
+            <div className="space-y-6">
+              {bracketViews.map((view) => (
+                <div key={view.key} className="space-y-3">
+                  {view.title !== "Bracket" ? (
+                    <h4 className="text-base font-semibold text-white">{view.title}</h4>
+                  ) : null}
+                  <BracketView rounds={view.rounds} />
+                </div>
+              ))}
+            </div>
           </div>
         ) : null}
 
