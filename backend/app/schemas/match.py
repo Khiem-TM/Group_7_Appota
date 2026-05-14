@@ -19,6 +19,9 @@ class MatchOut(BaseModel):
     status: str
     next_match_id: Optional[int]
     loser_next_match_id: Optional[int]
+    scheduled_at: Optional[str] = None
+    started_at: Optional[str] = None
+    finished_at: Optional[str] = None
     player1_name: Optional[str] = None
     player2_name: Optional[str] = None
     created_at: datetime
@@ -29,3 +32,5 @@ class MatchOut(BaseModel):
 class ReportMatchRequest(BaseModel):
     score_player1: int
     score_player2: int
+    started_at: Optional[str] = None
+    finished_at: Optional[str] = None

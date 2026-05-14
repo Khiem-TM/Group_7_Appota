@@ -1,8 +1,10 @@
 import asyncio
 from contextlib import asynccontextmanager, suppress
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
 from app.core.redis import close_redis, init_redis
@@ -11,6 +13,8 @@ from app.routers import (
     announcements,
     auth,
     explore,
+    games,
+    invitations,
     matches,
     standings,
     tournaments,
@@ -18,6 +22,9 @@ from app.routers import (
     websocket,
 )
 from app.services.realtime import redis_subscriber
+
+UPLOAD_ROOT = Path("uploads")
+UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
 
 OPENAPI_TAGS = [
     {
@@ -119,6 +126,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.mount("/uploads", StaticFiles(directory=str(UPLOAD_ROOT)), name="uploads")
+
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(tournaments.router)
@@ -127,6 +136,8 @@ app.include_router(standings.router)
 app.include_router(explore.router)
 app.include_router(explore.router2)
 app.include_router(announcements.router)
+app.include_router(games.router)
+app.include_router(invitations.router)
 app.include_router(websocket.router)
 
 

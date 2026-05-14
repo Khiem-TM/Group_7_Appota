@@ -5,6 +5,7 @@ import { createAnnouncement, listAnnouncements } from "../api/announcements";
 import { reportMatch } from "../api/matches";
 import {
   addParticipant,
+  addUserParticipant,
   generateBracket,
   getTournament,
   getTournamentMatches,
@@ -14,6 +15,7 @@ import {
   startTournament,
   toDisplayFormat
 } from "../api/tournaments";
+import { searchUsers } from "../api/users";
 import ConfirmModal from "../components/common/ConfirmModal";
 import EmptyState from "../components/common/EmptyState";
 import BracketView from "../components/tournaments/BracketView";
@@ -21,6 +23,8 @@ import BracketView from "../components/tournaments/BracketView";
 function ReportMatchModal({ match, onClose, onReported }) {
   const [score1, setScore1] = useState("");
   const [score2, setScore2] = useState("");
+  const [startedAt, setStartedAt] = useState("");
+  const [finishedAt, setFinishedAt] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -33,7 +37,13 @@ function ReportMatchModal({ match, onClose, onReported }) {
     }
     setLoading(true);
     try {
-      await reportMatch(match.id, Number(score1), Number(score2));
+      await reportMatch(
+        match.id,
+        Number(score1),
+        Number(score2),
+        startedAt ? new Date(startedAt).toISOString() : null,
+        finishedAt ? new Date(finishedAt).toISOString() : null,
+      );
       onReported();
       onClose();
     } catch (err) {
@@ -98,6 +108,26 @@ function ReportMatchModal({ match, onClose, onReported }) {
               {player2Name} Win
             </button>
           </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs uppercase tracking-wider text-on-surface-variant">Bắt đầu (tùy chọn)</label>
+              <input
+                type="datetime-local"
+                value={startedAt}
+                onChange={(e) => setStartedAt(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-sm text-white outline-none"
+              />
+            </div>
+            <div>
+              <label className="text-xs uppercase tracking-wider text-on-surface-variant">Kết thúc (tùy chọn)</label>
+              <input
+                type="datetime-local"
+                value={finishedAt}
+                onChange={(e) => setFinishedAt(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-sm text-white outline-none"
+              />
+            </div>
+          </div>
           {winnerName ? (
             <p className="rounded-lg bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-300">
               Winner: {winnerName}
@@ -134,8 +164,11 @@ function ManageTournamentPage() {
   const [annTitle, setAnnTitle] = useState("");
   const [annContent, setAnnContent] = useState("");
   const [annLoading, setAnnLoading] = useState(false);
-  const [participantName, setParticipantName] = useState("");
+  const [participantQuery, setParticipantQuery] = useState("");
+  const [participantResults, setParticipantResults] = useState([]);
+  const [selectedParticipantUser, setSelectedParticipantUser] = useState(null);
   const [participantLoading, setParticipantLoading] = useState(false);
+  const [participantSuccess, setParticipantSuccess] = useState("");
 
   async function reload() {
     try {
@@ -177,6 +210,29 @@ function ManageTournamentPage() {
     load();
   }, [id]);
 
+  useEffect(() => {
+    const query = participantQuery.trim();
+    if (query.length < 2 || selectedParticipantUser?.username === query) {
+      setParticipantResults([]);
+      return;
+    }
+
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      try {
+        const users = await searchUsers(query, 10);
+        if (!cancelled) setParticipantResults(users);
+      } catch {
+        if (!cancelled) setParticipantResults([]);
+      }
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [participantQuery, selectedParticipantUser]);
+
   const handleAction = async (action) => {
     setActionError("");
     try {
@@ -211,13 +267,25 @@ function ManageTournamentPage() {
 
   const handleAddParticipant = async (e) => {
     e.preventDefault();
-    const trimmedName = participantName.trim();
-    if (!trimmedName) return;
+    const participantName = participantQuery.trim();
+    if (!selectedParticipantUser && !participantName) {
+      setActionError("Enter a participant name or select a username.");
+      return;
+    }
     setActionError("");
+    setParticipantSuccess("");
     setParticipantLoading(true);
     try {
-      await addParticipant(id, trimmedName);
-      setParticipantName("");
+      if (selectedParticipantUser) {
+        await addUserParticipant(id, selectedParticipantUser.id);
+        setParticipantSuccess(`Added ${selectedParticipantUser.username} to the tournament.`);
+      } else {
+        await addParticipant(id, participantName);
+        setParticipantSuccess(`Added ${participantName} to the tournament.`);
+      }
+      setParticipantQuery("");
+      setParticipantResults([]);
+      setSelectedParticipantUser(null);
       await reload();
     } catch (err) {
       setActionError(err.response?.data?.detail || "Failed to add participant.");
@@ -307,21 +375,71 @@ function ManageTournamentPage() {
         {["DRAFT", "REGISTRATION_OPEN", "SEEDING"].includes(tournament.status) ? (
           <section className="rounded-xl border border-outline-variant bg-surface-container-low p-5">
             <h3 className="font-display text-xl text-white">Add Participant</h3>
-            <form onSubmit={handleAddParticipant} className="mt-4 flex flex-col gap-3 sm:flex-row">
-              <input
-                type="text"
-                value={participantName}
-                onChange={(e) => setParticipantName(e.target.value)}
-                placeholder="Participant name"
-                className="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-sm text-white outline-none focus:border-primary-container"
-              />
-              <button
-                type="submit"
-                disabled={participantLoading || !participantName.trim()}
-                className="rounded-xl bg-primary-container px-4 py-2.5 text-sm font-semibold text-on-primary hover:bg-primary disabled:opacity-60"
-              >
-                {participantLoading ? "Adding..." : "Add"}
-              </button>
+            {participantSuccess ? (
+              <p className="mt-3 rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">{participantSuccess}</p>
+            ) : null}
+            <form onSubmit={handleAddParticipant} className="mt-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+                <div className="relative w-full">
+                  <input
+                    type="text"
+                    value={participantQuery}
+                    onChange={(e) => {
+                      setParticipantQuery(e.target.value);
+                      setSelectedParticipantUser(null);
+                      setParticipantSuccess("");
+                    }}
+                    placeholder="Participant name, or search username"
+                    autoComplete="off"
+                    className="w-full rounded-lg border border-outline-variant bg-surface px-3 py-2 text-sm text-white outline-none focus:border-primary-container"
+                  />
+                  {participantResults.length > 0 ? (
+                    <div className="absolute left-0 right-0 top-full z-20 mt-2 max-h-72 overflow-auto rounded-xl border border-outline-variant bg-surface-container-high shadow-xl">
+                      {participantResults.map((user) => (
+                        <button
+                          key={user.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedParticipantUser(user);
+                            setParticipantQuery(user.username);
+                            setParticipantResults([]);
+                          }}
+                          className="flex w-full items-center gap-3 border-b border-outline-variant/50 px-3 py-2 text-left last:border-b-0 hover:bg-surface-container-highest"
+                        >
+                          {user.avatar_url ? (
+                            <img src={user.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
+                          ) : (
+                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-container text-xs font-semibold text-on-primary">
+                              {user.username.slice(0, 2).toUpperCase()}
+                            </span>
+                          )}
+                          <span className="min-w-0">
+                            <span className="block truncate text-sm font-semibold text-white">{user.username}</span>
+                            {user.full_name ? (
+                              <span className="block truncate text-xs text-on-surface-variant">{user.full_name}</span>
+                            ) : null}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                  {participantQuery.trim().length >= 2 && !selectedParticipantUser && participantResults.length === 0 ? (
+                    <p className="mt-2 text-xs text-on-surface-variant">Select a username from top 10 matches, or submit this text as a standalone participant name.</p>
+                  ) : null}
+                  {selectedParticipantUser ? (
+                    <p className="mt-2 text-xs text-emerald-300">
+                      Selected: {selectedParticipantUser.username}
+                    </p>
+                  ) : null}
+                </div>
+                <button
+                  type="submit"
+                  disabled={participantLoading || !participantQuery.trim()}
+                  className="shrink-0 rounded-xl bg-primary-container px-4 py-2.5 text-sm font-semibold text-on-primary hover:bg-primary disabled:opacity-60"
+                >
+                  {participantLoading ? "Adding..." : selectedParticipantUser ? "Add User" : "Add Name"}
+                </button>
+              </div>
             </form>
           </section>
         ) : null}

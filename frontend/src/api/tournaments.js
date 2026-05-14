@@ -53,6 +53,7 @@ export async function createTournament(payload) {
     description: payload.description || "",
     format: toBackendFormat(payload.format),
     game: payload.game || "",
+    game_id: payload.game_id || null,
     max_players: payload.maxPlayers || 16,
     visibility: "PUBLIC",
     start_date: payload.startDate || null,
@@ -91,6 +92,13 @@ export async function generateBracket(id) {
 export async function addParticipant(id, playerName) {
   const { data } = await client.post(`/tournaments/${id}/participants`, {
     player_name: playerName
+  });
+  return data;
+}
+
+export async function addUserParticipant(id, userId) {
+  const { data } = await client.post(`/tournaments/${id}/participants/user`, {
+    user_id: userId
   });
   return data;
 }

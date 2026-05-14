@@ -14,6 +14,7 @@ from app.schemas.common import MessageResponse
 from app.schemas.match import MatchOut
 from app.schemas.tournament import (
     ParticipantOut,
+    TournamentAddUserParticipant,
     TournamentCreate,
     TournamentJoinByPlayer,
     TournamentOut,
@@ -31,7 +32,8 @@ class AddParticipantRequest(BaseModel):
 class ParticipantOut(BaseModel):
     id: int
     tournament_id: int
-    player_id: int
+    user_id: Optional[int] = None
+    player_id: Optional[int] = None
     seed: Optional[int] = None
     eliminated: bool = False
     placement: Optional[int] = None
@@ -179,6 +181,19 @@ async def add_participant(
 ):
     participant = await tournament_service.add_participant(
         db, tournament_id, current_user.id, data.player_name
+    )
+    return ParticipantOut.model_validate(participant)
+
+
+@router.post("/{tournament_id}/participants/user", response_model=ParticipantOut)
+async def add_user_participant(
+    tournament_id: int,
+    data: TournamentAddUserParticipant,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_host),
+):
+    participant = await tournament_service.add_user_participant(
+        db, tournament_id, current_user.id, data.user_id
     )
     return ParticipantOut.model_validate(participant)
 

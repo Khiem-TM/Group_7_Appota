@@ -8,6 +8,7 @@ from app.models.base import TimestampMixin
 
 if TYPE_CHECKING:
     from app.models.announcement import Announcement
+    from app.models.game import Game
     from app.models.match import Match
     from app.models.participant import Participant
     from app.models.standing import Standing
@@ -34,11 +35,15 @@ class Tournament(Base, TimestampMixin):
     visibility: Mapped[str] = mapped_column(String(20), nullable=False, default="PUBLIC")
     max_players: Mapped[int] = mapped_column(Integer, nullable=False, default=16)
     game: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    game_id: Mapped[Optional[int]] = mapped_column(
+        BigInteger, ForeignKey("games.id"), nullable=True
+    )
     prize_pool: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     rules: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     start_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     bracket_generated: Mapped[bool] = mapped_column(default=False)
     
+    game_ref: Mapped[Optional["Game"]] = relationship("Game", back_populates="tournaments")
     host: Mapped["User"] = relationship(
         "User", back_populates="tournaments_hosted", foreign_keys=[host_id]
     )
@@ -54,3 +59,7 @@ class Tournament(Base, TimestampMixin):
     announcements: Mapped[List["Announcement"]] = relationship(
         "Announcement", back_populates="tournament", cascade="all, delete-orphan"
     )
+
+    @property
+    def game_thumbnail_url(self) -> Optional[str]:
+        return self.game_ref.thumbnail_url if self.game_ref else None

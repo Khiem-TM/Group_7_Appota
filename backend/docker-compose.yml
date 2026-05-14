@@ -64,9 +64,10 @@ services:
         condition: service_healthy
     volumes:
       - ./repair_schema_refactor.sql:/migrations/repair_schema_refactor.sql
+      - ./migrate_new_features.sql:/migrations/migrate_new_features.sql
     command: >
-      psql -h postgres -U postgres -d tournament_db
-      -f /migrations/repair_schema_refactor.sql
+      sh -c "psql -h postgres -U postgres -d tournament_db -f /migrations/repair_schema_refactor.sql
+      && psql -h postgres -U postgres -d tournament_db -f /migrations/migrate_new_features.sql"
     restart: "no"
 
   postgres:

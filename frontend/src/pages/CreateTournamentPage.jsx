@@ -3,11 +3,11 @@ import {
   Link2,
   List,
   ListOrdered,
-  Search,
   Trophy
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { listGames } from "../api/games";
 import { createTournament } from "../api/tournaments";
 
 const sectionTitle = "mb-6 text-xs font-bold uppercase tracking-[0.16em] text-on-surface-variant";
@@ -18,13 +18,21 @@ function CreateTournamentPage() {
   const navigate = useNavigate();
   const [tournamentName, setTournamentName] = useState("");
   const [description, setDescription] = useState("");
-  const [game, setGame] = useState("");
+  const [games, setGames] = useState([]);
+  const [selectedGameId, setSelectedGameId] = useState(null);
+  const [customGame, setCustomGame] = useState("");
   const [format, setFormat] = useState("Single Elimination");
   const [maxPlayers, setMaxPlayers] = useState(16);
   const [startTime, setStartTime] = useState("");
   const [prizePool, setPrizePool] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    listGames().then(setGames).catch(() => {});
+  }, []);
+
+  const selectedGame = games.find((g) => g.id === selectedGameId) ?? null;
 
   const handleSaveAndContinue = async () => {
     if (!tournamentName.trim()) {
@@ -34,11 +42,13 @@ function CreateTournamentPage() {
     setError("");
     setSubmitting(true);
     try {
+      const gameName = selectedGame ? selectedGame.name : customGame || null;
       const tournament = await createTournament({
         name: tournamentName.trim(),
         description,
         format,
-        game,
+        game: gameName,
+        game_id: selectedGameId || null,
         maxPlayers: Number(maxPlayers),
         startDate: startTime ? new Date(startTime).toISOString().slice(0, 10) : null,
         prizePool: prizePool || null
@@ -119,24 +129,51 @@ function CreateTournamentPage() {
               <div className="space-y-8">
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
                   <label className={`${labelClass} text-white`}>
-                    Game <span className="text-error">*</span>
+                    Game
                   </label>
                   <div className="space-y-4 md:col-span-3">
-                    <div className="rounded-lg border border-outline-variant bg-surface-container-highest p-4">
-                      <p className="text-sm text-on-surface-variant">
-                        Putting a game allows your tournament to be discovered easier.
-                      </p>
-                      <div className="relative mt-4">
-                        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/80" />
-                        <input
-                          className={`${fieldClass} pl-9`}
-                          placeholder="The game or sport being played"
-                          value={game}
-                          onChange={(event) => setGame(event.target.value)}
-                          type="text"
-                        />
-                      </div>
+                    <p className="text-sm text-on-surface-variant">
+                      Chọn game để giải đấu dễ được tìm kiếm hơn.
+                    </p>
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                      {games.map((g) => (
+                        <button
+                          key={g.id}
+                          type="button"
+                          onClick={() => setSelectedGameId(selectedGameId === g.id ? null : g.id)}
+                          className={`relative overflow-hidden rounded-xl border transition-all ${
+                            selectedGameId === g.id
+                              ? "border-tertiary-container ring-2 ring-tertiary-container/50"
+                              : "border-outline-variant hover:border-outline"
+                          }`}
+                        >
+                          <img
+                            src={g.thumbnail_url}
+                            alt={g.name}
+                            className="h-24 w-full object-cover"
+                            onError={(e) => { e.target.style.display = "none"; }}
+                          />
+                          <div className="bg-surface-container-highest px-2 py-1.5">
+                            <p className="truncate text-xs font-semibold text-white">{g.name}</p>
+                            <p className="truncate text-[10px] text-on-surface-variant">{g.genre}</p>
+                          </div>
+                          {selectedGameId === g.id ? (
+                            <span className="absolute right-1.5 top-1.5 rounded-full bg-tertiary-container px-1.5 py-0.5 text-[10px] font-bold text-white">
+                              ✓
+                            </span>
+                          ) : null}
+                        </button>
+                      ))}
                     </div>
+                    {!selectedGameId ? (
+                      <input
+                        className={fieldClass}
+                        placeholder="Hoặc nhập tên game tùy chỉnh..."
+                        value={customGame}
+                        onChange={(e) => setCustomGame(e.target.value)}
+                        type="text"
+                      />
+                    ) : null}
                   </div>
                 </div>
 

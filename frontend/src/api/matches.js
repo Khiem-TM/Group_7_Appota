@@ -5,10 +5,10 @@ export async function getMatch(matchId) {
   return data;
 }
 
-export async function reportMatch(matchId, scorePLayer1, scorePlayer2) {
-  const { data } = await client.post(`/matches/${matchId}/report`, {
-    score_player1: scorePLayer1,
-    score_player2: scorePlayer2
-  });
+export async function reportMatch(matchId, scorePlayer1, scorePlayer2, startedAt = null, finishedAt = null) {
+  const body = { score_player1: scorePlayer1, score_player2: scorePlayer2 };
+  if (startedAt) body.started_at = startedAt;
+  if (finishedAt) body.finished_at = finishedAt;
+  const { data } = await client.post(`/matches/${matchId}/report`, body);
   return data;
 }

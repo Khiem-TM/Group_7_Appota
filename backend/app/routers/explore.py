@@ -16,6 +16,7 @@ router = APIRouter(prefix="/explore", tags=["explore"])
 def _tournament_out(t, count: int) -> TournamentOut:
     return TournamentOut(
         **{k: v for k, v in t.__dict__.items() if not k.startswith("_")},
+        game_thumbnail_url=t.game_thumbnail_url,
         participant_count=count,
     )
 

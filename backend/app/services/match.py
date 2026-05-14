@@ -49,6 +49,10 @@ async def report_match(
         raise BadRequest("Draws are not allowed; one player must win")
 
     match.status = "COMPLETED"
+    if data.started_at:
+        match.started_at = data.started_at
+    from datetime import datetime, timezone
+    match.finished_at = data.finished_at or datetime.now(timezone.utc).isoformat()
     await db.commit()
 
     # Update standings
@@ -72,7 +76,48 @@ async def report_match(
             },
         )
 
+    # Auto-complete tournament if no playable matches remain
+    await db.refresh(tournament)
+    await _check_tournament_complete(db, tournament, redis_client if redis_client else None)
+
     return match
+
+
+async def _check_tournament_complete(db, tournament, redis_client) -> None:
+    from sqlalchemy import or_
+
+    result = await db.execute(
+        select(Match).where(
+            Match.tournament_id == tournament.id,
+            Match.status.in_(["READY", "SCHEDULED", "PENDING"]),
+            or_(Match.player1_id.isnot(None), Match.player2_id.isnot(None)),
+        )
+    )
+    actionable = result.scalars().all()
+
+    # Double elimination: an unfilled GRAND_FINAL_RESET means WB champion won clean — skip it
+    if tournament.format == "DOUBLE_ELIMINATION":
+        actionable = [
+            m for m in actionable
+            if not (
+                m.bracket == "GRAND_FINAL_RESET"
+                and m.player1_id is None
+                and m.player2_id is None
+            )
+        ]
+
+    if actionable:
+        return
+
+    tournament.status = "FINISHED"
+    await db.commit()
+
+    if redis_client:
+        await publish_event(
+            redis_client,
+            tournament.id,
+            {"type": "TOURNAMENT_FINISHED", "tournament_id": tournament.id},
+        )
 
 
 async def list_tournament_matches(db: AsyncSession, tournament_id: int):

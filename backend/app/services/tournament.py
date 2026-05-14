@@ -37,6 +37,7 @@ async def create_tournament(db: AsyncSession, host: User, data: TournamentCreate
         visibility=data.visibility.upper(),
         max_players=data.max_players,
         game=data.game,
+        game_id=data.game_id,
         prize_pool=data.prize_pool,
         rules=data.rules,
         start_date=data.start_date,
@@ -304,6 +305,84 @@ async def add_participant(
     await db.flush()
 
     # Create standing
+    standing = Standing(
+        tournament_id=tournament_id,
+        participant_id=participant.id,
+    )
+    db.add(standing)
+
+    await db.commit()
+    await db.refresh(participant)
+    return participant
+
+
+async def add_user_participant(
+    db: AsyncSession, tournament_id: int, host_id: int, user_id: int
+) -> Participant:
+    """Host adds an existing account as a tournament participant."""
+    t = await get_tournament(db, tournament_id)
+    if t.host_id != host_id:
+        raise Forbidden("Only host can add participants")
+
+    if t.status not in ("DRAFT", "REGISTRATION_OPEN", "SEEDING"):
+        raise BadRequest("Cannot add participants in current tournament state")
+
+    user_result = await db.execute(select(User).where(User.id == user_id, User.is_active))
+    user = user_result.scalar_one_or_none()
+    if not user:
+        raise NotFound("User not found")
+
+    existing = await db.execute(
+        select(Participant).where(
+            Participant.tournament_id == tournament_id,
+            Participant.user_id == user_id,
+        )
+    )
+    if existing.scalar_one_or_none():
+        raise Conflict("User already added to this tournament")
+
+    count_result = await db.execute(
+        select(func.count()).select_from(Participant).where(
+            Participant.tournament_id == tournament_id
+        )
+    )
+    count = count_result.scalar() or 0
+    if count >= t.max_players:
+        raise BadRequest("Tournament is full")
+
+    player_result = await db.execute(
+        select(Player).where(
+            Player.created_by == user.id,
+            Player.display_name == user.username,
+        )
+    )
+    player = player_result.scalar_one_or_none()
+    if not player:
+        player = Player(
+            display_name=user.username,
+            avatar_url=user.avatar_url,
+            created_by=user.id,
+        )
+        db.add(player)
+        await db.flush()
+
+    existing_player = await db.execute(
+        select(Participant).where(
+            Participant.tournament_id == tournament_id,
+            Participant.player_id == player.id,
+        )
+    )
+    if existing_player.scalar_one_or_none():
+        raise Conflict("User already added to this tournament")
+
+    participant = Participant(
+        tournament_id=tournament_id,
+        user_id=user.id,
+        player_id=player.id,
+    )
+    db.add(participant)
+    await db.flush()
+
     standing = Standing(
         tournament_id=tournament_id,
         participant_id=participant.id,

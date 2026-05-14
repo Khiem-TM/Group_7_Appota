@@ -32,6 +32,7 @@ function App() {
         <Route path="tournaments/:id/:tab" element={<TournamentDetailPage />} />
         <Route path="tournaments/:id/manage" element={<ManageTournamentPage />} />
         <Route path="profile" element={<ProfilePage />} />
+        <Route path="users/:userId" element={<ProfilePage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

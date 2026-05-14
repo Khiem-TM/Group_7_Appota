@@ -37,6 +37,7 @@ class Match(Base, TimestampMixin):
     score2: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="SCHEDULED")
     scheduled_at: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    started_at: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     finished_at: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
 
     tournament: Mapped["Tournament"] = relationship("Tournament", back_populates="matches")

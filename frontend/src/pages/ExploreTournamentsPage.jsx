@@ -38,6 +38,7 @@ function ExploreTournamentsPage() {
         id: t.id,
         name: t.name,
         game: t.game || "Unknown",
+        banner: t.game_thumbnail_url || null,
         format: toDisplayFormat(t.format),
         status: toDisplayStatus(t.status),
         participants: t.participant_count,
